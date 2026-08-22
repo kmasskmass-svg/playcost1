@@ -5,21 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تحدي محاسبة التكاليف – متعدد الفرق</title>
 
-    <!-- إضافة Firebase SDK -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <style>
+        /* جميع الأنماط كما هي مع تعديلات بسيطة */
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,sans-serif; }
         body { background:linear-gradient(135deg,#0f2027,#203a43,#2c5364); min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; }
         .app-container { background:rgba(255,255,255,0.95); border-radius:24px; padding:30px 35px; max-width:1050px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.5); position:relative; }
-        
-        /* رأس التطبيق مع اسم المعد */
         .app-header { text-align:center; border-bottom:2px solid #e0e7ef; padding-bottom:12px; margin-bottom:20px; }
         .app-header h1 { color:#0f2027; font-size:28px; margin-bottom:2px; }
         .app-header .author { color:#2c5364; font-size:16px; font-weight:600; letter-spacing:0.5px; }
         .app-header .author span { color:#1a4a5a; }
-        
         .subtitle { text-align:center; color:#2c5364; font-size:16px; margin-bottom:15px; }
         .unit-title { text-align:center; font-size:22px; font-weight:700; color:#1a4a5a; margin:10px 0 15px; padding:10px; background:linear-gradient(135deg,#e8f0f5,#d4e2ed); border-radius:14px; border-right:6px solid #2c5364; }
         .form-group { margin-bottom:18px; }
@@ -80,7 +78,7 @@
         .score-control { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; }
         .score-control input { width:80px; padding:6px 10px; font-size:14px; }
 
-        /* ===== الزر العائم ===== */
+        /* الزر العائم */
         .fab {
             position: fixed;
             bottom: 30px;
@@ -101,13 +99,10 @@
             justify-content: center;
             line-height: 1;
         }
-        .fab:hover {
-            transform: scale(1.1) rotate(-8deg);
-            box-shadow: 0 12px 35px rgba(44,83,100,0.5);
-        }
+        .fab:hover { transform: scale(1.1) rotate(-8deg); box-shadow: 0 12px 35px rgba(44,83,100,0.5); }
         .fab:active { transform: scale(0.9); }
 
-        /* ===== نافذة الدليل ===== */
+        /* نافذة الدليل */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -183,7 +178,6 @@
 
 <div class="app-container">
 
-    <!-- ===== رأس التطبيق مع اسم المعد ===== -->
     <div class="app-header">
         <h1>🧾 محاسبة التكاليف</h1>
         <div class="author">✍️ إعداد: <span>كليب بن أحمد الزهراني</span></div>
@@ -200,12 +194,13 @@
             <h3 style="margin-bottom:15px; color:#0f2027;">🏠 غرفة التحدي</h3>
             <div class="input-row">
                 <div class="form-group">
-                    <label>🔑 رمز الغرفة (اختر رمزاً أو اتركه عشوائياً):</label>
-                    <input type="text" id="roomCodeInput" placeholder="أدخل رمزاً من اختيارك (مثل: CHALLENGE2025)" style="direction:ltr; text-align:left;">
+                    <label>🔑 رمز الغرفة (4 أرقام):</label>
+                    <input type="text" id="roomCodeInput" placeholder="أدخل 4 أرقام أو اتركه لتوليد عشوائي" maxlength="4" style="direction:ltr; text-align:center; font-size:24px; letter-spacing:8px;">
                 </div>
                 <div class="form-group" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                    <button class="btn btn-success" id="createRoomBtn" style="flex:1;">🆕 إنشاء غرفة بهذا الرمز</button>
+                    <button class="btn btn-success" id="createRoomBtn" style="flex:1;">🆕 إنشاء غرفة</button>
                     <button class="btn btn-generate" id="joinRoomBtn" style="flex:1;">🚪 انضم للغرفة</button>
+                    <button class="btn btn-warning" id="generateCodeBtn" style="flex:0.5;">🎲 توليد رمز</button>
                 </div>
             </div>
             <div id="roomStatus" style="margin-top:10px; color:#2c5364; font-weight:500;"></div>
@@ -217,7 +212,6 @@
     <!-- ========================================================== -->
     <div id="challengeInterface" style="display:none;">
 
-        <!-- اختيار النشاط ونوع المسألة -->
         <div class="form-group">
             <label for="activityType">🏢 اختر نوع النشاط الاقتصادي:</label>
             <select id="activityType">
@@ -240,7 +234,6 @@
             </select>
         </div>
 
-        <!-- إعداد الفريق الحالي -->
         <div class="room-setup">
             <h3 style="margin-bottom:10px;">👤 بيانات فريقك</h3>
             <div class="input-row">
@@ -255,7 +248,6 @@
             <div id="teamStatus" style="margin-top:8px; color:#0f2027; font-weight:500;"></div>
         </div>
 
-        <!-- روابط المشاركة -->
         <div class="share-box">
             <span style="font-weight:600;">🔗 رابط الدعوة:</span>
             <input type="text" id="inviteLink" readonly>
@@ -266,14 +258,12 @@
             </div>
         </div>
 
-        <!-- لوحة المتصدرين -->
         <div id="leaderboard">
             <h3 style="margin:15px 0 10px;">🏆 لوحة المتصدرين</h3>
             <div id="podiumContainer" class="podium"></div>
             <div id="teamsContainer"></div>
         </div>
 
-        <!-- أسئلة التحدي -->
         <div id="challengeQuestions" style="margin-top:20px;">
             <div class="flex-between">
                 <h3 style="color:#0f2027;">📝 أسئلة التحدي</h3>
@@ -285,21 +275,17 @@
             </div>
         </div>
 
-        <!-- التحكم في الدرجات (للمنشئ فقط) -->
         <div id="scoreControlArea" style="display:none; margin-top:20px; background:#f0f4f9; border-radius:16px; padding:20px;">
             <h3 style="margin-bottom:10px;">🎛️ التحكم في درجات الفرق (للمنشئ فقط)</h3>
             <div id="scoreControlContainer"></div>
             <button class="btn btn-warning" id="resetScoresBtn" style="margin-top:10px;">🔄 إعادة تعيين جميع الدرجات</button>
         </div>
 
-        <!-- زر الخروج -->
         <button class="btn btn-danger" id="exitRoomBtn" style="margin-top:20px; width:auto; padding:10px 30px;">🚪 الخروج من الغرفة</button>
     </div>
 
-    <!-- عرض الأخطاء -->
     <div id="errorBox" class="error"></div>
 
-    <!-- عرض النتيجة -->
     <div id="resultBox" class="result-box">
         <h3>📊 النتيجة</h3>
         <div id="stepsContainer"></div>
@@ -308,14 +294,10 @@
 
 </div>
 
-<!-- ========================================================== -->
-<!-- الزر العائم (FAB) -->
-<!-- ========================================================== -->
+<!-- الزر العائم -->
 <button class="fab" id="helpFab" aria-label="دليل المستخدم">📘</button>
 
-<!-- ========================================================== -->
-<!-- نافذة الدليل المنبثقة (Modal) -->
-<!-- ========================================================== -->
+<!-- نافذة الدليل -->
 <div class="modal-overlay" id="helpModal">
     <div class="modal-box">
         <button class="close-modal" id="closeHelpModal">✕</button>
@@ -323,75 +305,46 @@
         <p style="font-size:16px; color:#1e2b37; margin-bottom:10px;">
             📧 للتواصل والدعم: <a href="mailto:kmasskmass@gmail.com" style="color:#2c5364; font-weight:700;">kmasskmass@gmail.com</a>
         </p>
-
         <h3>🎯 نظرة عامة عن التطبيق</h3>
-        <p>هذا التطبيق التفاعلي صُمم خصيصاً لمساعدة طلاب ومدربي مادة <strong>محاسبة التكاليف (الوحدة الأولى: مفهوم التكاليف وتبويباتها)</strong> على فهم الفرق بين <strong>التكاليف المباشرة وغير المباشرة</strong> بطريقة عملية وممتعة.</p>
-        <p>الميزة الأهم هي <strong>التحدي الجماعي عبر الإنترنت</strong>، حيث يمكن للمدرب إنشاء غرفة خاصة، وتوليد أسئلة تناسب نشاطاً اقتصادياً معيناً (كوفي شوب، ورشة نجارة، مصنع ملابس، إلخ)، ثم يدعو الطلاب للانضمام عبر روابط مباشرة (واتساب، تيليجرام). يتنافس الطلاب (فرق) فيما بينهم بتصنيف التكاليف، وتُحتسب النقاط لحظياً، مع إمكانية للمدرب للتحكم الكامل بالدرجات.</p>
+        <p>هذا التطبيق التفاعلي صُمم خصيصاً لمساعدة طلاب ومدربي مادة <strong>محاسبة التكاليف (الوحدة الأولى)</strong> على فهم الفرق بين <strong>التكاليف المباشرة وغير المباشرة</strong> بطريقة عملية وممتعة.</p>
+        <p>الميزة الأهم هي <strong>التحدي الجماعي عبر الإنترنت</strong>، حيث يمكن للمدرب إنشاء غرفة خاصة، وتوليد أسئلة تناسب نشاطاً اقتصادياً معيناً، ثم يدعو الطلاب للانضمام عبر روابط مباشرة.</p>
 
         <h3>🧑‍🏫 دليل الاستخدام خطوة بخطوة (للمنشئ)</h3>
         <h4>الخطوة الأولى: إنشاء الغرفة</h4>
         <ul>
-            <li>افتح الرابط.</li>
-            <li>في حقل "🔑 رمز الغرفة": اكتب رمزاً من اختيارك (مثل <code>ACCOUNTING101</code>) أو اتركه فارغاً ليولد تلقائياً.</li>
-            <li>اضغط <strong>"🆕 إنشاء غرفة بهذا الرمز"</strong>.</li>
+            <li>افتح التطبيق.</li>
+            <li>في حقل "رمز الغرفة": أدخل 4 أرقام من اختيارك، أو اضغط على زر "🎲 توليد رمز".</li>
+            <li>اضغط <strong>"🆕 إنشاء غرفة"</strong>.</li>
         </ul>
         <h4>الخطوة الثانية: إعداد التحدي</h4>
         <ul>
-            <li>اختر نوع النشاط الاقتصادي (كوفي شوب، ورشة نجارة، إلخ).</li>
-            <li>اختر نوع المسألة (الوحدة الأولى حالياً تدعم التبويب مباشر/غير مباشر).</li>
+            <li>اختر نوع النشاط الاقتصادي.</li>
             <li>اضغط <strong>"🎲 توليد أسئلة جديدة"</strong>.</li>
         </ul>
-        <h4>الخطوة الثالثة: تسجيل فريقك</h4>
+        <h4>الخطوة الثالثة: تسجيل فريقك ومشاركة الرابط</h4>
         <ul>
-            <li>في قسم "👤 بيانات فريقك"، اكتب اسم فريقك.</li>
-            <li>اضغط <strong>"✅ تسجيل الفريق"</strong>.</li>
-        </ul>
-        <h4>الخطوة الرابعة: مشاركة الرابط</h4>
-        <ul>
-            <li>انسخ الرابط من صندوق المشاركة أو استخدم أزرار واتساب/تيليجرام.</li>
-            <li>أرسله للفرق الأخرى.</li>
-        </ul>
-        <h4>الخطوة الخامسة: متابعة التحدي والتحكم بالدرجات</h4>
-        <ul>
-            <li>لوحة المتصدرين تعرض الدرجات لحظياً.</li>
-            <li>في منطقة "🎛️ التحكم في درجات الفرق" يمكنك تعديل الدرجات يدوياً، إضافة أو خصم نقاط، أو إعادة تعيين جميع الدرجات.</li>
+            <li>اكتب اسم فريقك واضغط <strong>"✅ تسجيل الفريق"</strong>.</li>
+            <li>انسخ الرابط أو شاركه عبر واتساب/تيليجرام مع الفرق الأخرى.</li>
         </ul>
 
-        <h3>👨‍🎓 دليل الاستخدام (لأعضاء الفرق/الطلاب)</h3>
+        <h3>👨‍🎓 دليل الاستخدام (لأعضاء الفرق)</h3>
         <ul>
-            <li>استلم الرابط وافتحه.</li>
-            <li>سيتم تعبئة رمز الغرفة تلقائياً. اضغط <strong>"🚪 انضم للغرفة"</strong>.</li>
+            <li>افتح الرابط المرسل.</li>
+            <li>سيظهر رمز الغرفة تلقائياً. اضغط <strong>"🚪 انضم للغرفة"</strong>.</li>
             <li>سجل اسم فريقك.</li>
-            <li>اختر تصنيف كل تكلفة (مباشرة / غير مباشرة) من القائمة المنسدلة.</li>
-            <li>بعد الانتهاء، اضغط <strong>"✅ تقديم الإجابات"</strong> لحساب النتيجة.</li>
-        </ul>
-
-        <h3>⚙️ الميزات المتقدمة والإدارة</h3>
-        <ul>
-            <li><strong>التحكم الكامل بالأسئلة:</strong> يمكن للمنشئ تغيير النشاط وتوليد أسئلة جديدة في أي وقت.</li>
-            <li><strong>التزامن الفوري:</strong> جميع التغييرات تنعكس على جميع الأجهزة المتصلة في أقل من ثانية.</li>
-            <li><strong>واجهة متجاوبة:</strong> تعمل بشكل مثالي على الجوالات والأجهزة اللوحية.</li>
-            <li><strong>مرونة المشاركة:</strong> الانضمام عبر الرابط دون حاجة لتسجيل دخول.</li>
+            <li>اختر تصنيف كل تكلفة، ثم اضغط <strong>"✅ تقديم الإجابات"</strong>.</li>
         </ul>
 
         <h3>🔧 استكشاف الأخطاء وإصلاحها</h3>
         <ul>
-            <li><strong>الغرفة غير موجودة:</strong> تأكد من كتابة الرمز بشكل صحيح.</li>
+            <li><strong>الغرفة غير موجودة:</strong> تأكد من صحة الرمز (4 أرقام).</li>
             <li><strong>لا تظهر الأسئلة:</strong> تأكد أن المنشئ ضغط على "توليد أسئلة جديدة".</li>
             <li><strong>زر التوليد غير نشط:</strong> فقط منشئ الغرفة لديه هذه الصلاحية.</li>
         </ul>
 
-        <h3>📜 سياسة الخصوصية والاستخدام</h3>
-        <ul>
-            <li>التطبيق مخصص للأغراض التعليمية والتدريبية فقط.</li>
-            <li>جميع البيانات تخزن مؤقتاً في Firebase لحين حذف الغرفة من قبل المنشئ.</li>
-            <li>لا يتم مشاركة أو بيع أي بيانات لأطراف خارجية.</li>
-        </ul>
-
         <div class="contact">
             <strong>📧 التواصل والدعم</strong><br>
-            البريد الإلكتروني: <a href="mailto:kmasskmass@gmail.com">kmasskmass@gmail.com</a><br>
-            سيتم الرد في أقرب وقت ممكن (خلال 24 ساعة).
+            البريد الإلكتروني: <a href="mailto:kmasskmass@gmail.com">kmasskmass@gmail.com</a>
         </div>
 
         <p style="text-align:center; margin-top:15px; color:#5e6f7e; font-size:14px;">
@@ -424,10 +377,10 @@
     // ============================================================
     let currentRoom = null;
     let myTeamId = null;
-    let myTeamName = '';
     let teams = [];
     let challengeItems = [];
     let isRoomCreator = false;
+    let roomListeners = [];
 
     // عناصر الواجهة
     const roomScreen = document.getElementById('roomScreen');
@@ -435,6 +388,7 @@
     const roomCodeInput = document.getElementById('roomCodeInput');
     const createRoomBtn = document.getElementById('createRoomBtn');
     const joinRoomBtn = document.getElementById('joinRoomBtn');
+    const generateCodeBtn = document.getElementById('generateCodeBtn');
     const roomStatus = document.getElementById('roomStatus');
     const inviteLink = document.getElementById('inviteLink');
     const copyLinkBtn = document.getElementById('copyLinkBtn');
@@ -484,6 +438,12 @@
         clearError();
     }
 
+    // توليد رمز عشوائي من 4 أرقام
+    function generateRoomCode() {
+        return String(Math.floor(1000 + Math.random() * 9000));
+    }
+
+    // الحصول على تكاليف النشاط
     function getActivityCosts(activityKey) {
         const data = {
             cafe: { name:'☕ كوفي شوب', direct:['حبوب القهوة','حليب','سكر','أكواب ورقية','أغطية','أكياس سكر','قشات','مناديل'], indirect:['إيجار المحل','رواتب الباريستا','رواتب الإدارة','كهرباء وماء','استهلاك آلة الإسبريسو','تأمين','دعاية','عمال نظافة','صيانة','مواد تنظيف'] },
@@ -517,13 +477,18 @@
     //  دوال المزامنة مع Firebase
     // ============================================================
     function syncRoom(roomId) {
+        // إزالة المستمعين السابقين
+        roomListeners.forEach(ref => ref.off());
+        roomListeners = [];
+
         const roomRef = database.ref('rooms/' + roomId);
-        roomRef.on('value', (snapshot) => {
+        const listener = roomRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) {
                 showError('الغرفة غير موجودة أو تم حذفها.');
                 return;
             }
+            // تحديث الفرق
             if (data.teams) {
                 teams = Object.values(data.teams).map(t => ({
                     id: t.id,
@@ -535,6 +500,7 @@
                 renderLeaderboard();
                 renderScoreControls();
             }
+            // تحديث الأسئلة
             if (data.questions) {
                 const qs = Object.values(data.questions);
                 challengeItems = qs.map(q => {
@@ -548,14 +514,16 @@
                 });
                 renderChallengeQuestions();
             }
+            // تحديث رابط الدعوة
             const url = new URL(window.location.href);
             url.searchParams.set('room', roomId);
             inviteLink.value = url.toString();
         });
+        roomListeners.push({ ref: roomRef, off: () => roomRef.off() });
     }
 
     function saveTeam(roomId, teamId, teamData) {
-        database.ref('rooms/' + roomId + '/teams/' + teamId).set(teamData);
+        return database.ref('rooms/' + roomId + '/teams/' + teamId).set(teamData);
     }
 
     function saveQuestions(roomId, questions) {
@@ -563,15 +531,15 @@
         questions.forEach((q, i) => {
             qObj[i] = { name: q.name, correctType: q.correctType };
         });
-        database.ref('rooms/' + roomId + '/questions').set(qObj);
+        return database.ref('rooms/' + roomId + '/questions').set(qObj);
     }
 
     function saveAnswer(roomId, questionIndex, teamId, choice) {
-        database.ref('rooms/' + roomId + '/questions/' + questionIndex + '/answers/' + teamId).set(choice);
+        return database.ref('rooms/' + roomId + '/questions/' + questionIndex + '/answers/' + teamId).set(choice);
     }
 
     function updateTeamScore(roomId, teamId, newScore) {
-        database.ref('rooms/' + roomId + '/teams/' + teamId + '/score').set(newScore);
+        return database.ref('rooms/' + roomId + '/teams/' + teamId + '/score').set(newScore);
     }
 
     function resetAllScores(roomId) {
@@ -758,6 +726,7 @@
         scoreControlContainer.innerHTML = html;
     }
 
+    // وظائف للتحكم في الدرجات (تكون عالمية)
     window.updateScore = function(teamId) {
         const input = document.getElementById('scoreInput_' + teamId);
         if (!input) return;
@@ -787,10 +756,11 @@
         syncRoom(roomId);
         if (asCreator) {
             const qs = generateQuestions(activityType.value);
-            saveQuestions(roomId, qs);
-            challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
-            renderChallengeQuestions();
-            renderScoreControls();
+            saveQuestions(roomId, qs).then(() => {
+                challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
+                renderChallengeQuestions();
+                renderScoreControls();
+            });
         }
         roomStatus.textContent = `✅ دخلت الغرفة: ${roomId}`;
         const url = new URL(window.location.href);
@@ -802,7 +772,9 @@
 
     function exitRoom() {
         if (currentRoom) {
-            database.ref('rooms/' + currentRoom).off();
+            // إزالة المستمعين
+            roomListeners.forEach(l => l.off());
+            roomListeners = [];
             if (isRoomCreator) {
                 if (confirm('هل تريد حذف الغرفة؟')) {
                     database.ref('rooms/' + currentRoom).remove();
@@ -828,12 +800,25 @@
     //  أحداث المستخدم
     // ============================================================
 
+    // توليد رمز عشوائي
+    generateCodeBtn.addEventListener('click', function() {
+        roomCodeInput.value = generateRoomCode();
+        roomStatus.textContent = '✅ تم توليد رمز: ' + roomCodeInput.value;
+    });
+
+    // إنشاء غرفة
     createRoomBtn.addEventListener('click', function() {
-        let code = roomCodeInput.value.trim().toUpperCase();
-        if (!code) {
-            code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        let code = roomCodeInput.value.trim();
+        // التأكد من أن الرمز هو 4 أرقام
+        if (code.length === 0) {
+            code = generateRoomCode();
             roomCodeInput.value = code;
+        } else if (!/^\d{4}$/.test(code)) {
+            showError('الرمز يجب أن يكون 4 أرقام فقط (مثال: 1234).');
+            return;
         }
+
+        // التحقق من عدم وجود الغرفة
         database.ref('rooms/' + code).once('value', (snap) => {
             if (snap.exists()) {
                 showError('هذه الغرفة موجودة بالفعل. اختر رمزاً آخر.');
@@ -846,7 +831,7 @@
             };
             database.ref('rooms/' + code).set(roomData, (err) => {
                 if (err) {
-                    showError('حدث خطأ: ' + err.message);
+                    showError('حدث خطأ في Firebase: ' + err.message);
                 } else {
                     enterRoom(code, true);
                 }
@@ -854,10 +839,11 @@
         });
     });
 
+    // الانضمام لغرفة
     joinRoomBtn.addEventListener('click', function() {
-        const code = roomCodeInput.value.trim().toUpperCase();
-        if (!code) {
-            showError('الرجاء إدخال رمز الغرفة.');
+        const code = roomCodeInput.value.trim();
+        if (!/^\d{4}$/.test(code)) {
+            showError('الرمز يجب أن يكون 4 أرقام فقط (مثال: 1234).');
             return;
         }
         database.ref('rooms/' + code).once('value', (snap) => {
@@ -869,6 +855,7 @@
         });
     });
 
+    // تسجيل الفريق
     setTeamBtn.addEventListener('click', function() {
         const name = myTeamNameInput.value.trim();
         if (!name) {
@@ -879,7 +866,7 @@
             showError('الرجاء الدخول إلى غرفة أولاً.');
             return;
         }
-        myTeamName = name;
+        // استخدام معرف فريد للفريق
         const teamId = Date.now().toString(36) + Math.random().toString(36).substring(2,5);
         const teamData = {
             id: teamId,
@@ -888,24 +875,32 @@
             total: 0,
             correct: 0
         };
-        saveTeam(currentRoom, teamId, teamData);
-        myTeamId = teamId;
-        teamStatus.textContent = `✅ تم تسجيل فريق "${name}" بنجاح!`;
+        saveTeam(currentRoom, teamId, teamData).then(() => {
+            myTeamId = teamId;
+            teamStatus.textContent = `✅ تم تسجيل فريق "${name}" بنجاح!`;
+        }).catch(err => {
+            showError('حدث خطأ أثناء تسجيل الفريق: ' + err.message);
+        });
     });
 
+    // توليد أسئلة جديدة (للمنشئ فقط)
     generateChallengeBtn.addEventListener('click', function() {
         if (!isRoomCreator) {
             showError('فقط منشئ الغرفة يمكنه توليد الأسئلة.');
             return;
         }
         const qs = generateQuestions(activityType.value);
-        saveQuestions(currentRoom, qs);
-        challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
-        renderChallengeQuestions();
-        resultBox.classList.remove('show');
-        clearError();
+        saveQuestions(currentRoom, qs).then(() => {
+            challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
+            renderChallengeQuestions();
+            resultBox.classList.remove('show');
+            clearError();
+        }).catch(err => {
+            showError('حدث خطأ أثناء توليد الأسئلة: ' + err.message);
+        });
     });
 
+    // تقديم الإجابات
     submitChallengeBtn.addEventListener('click', function() {
         if (!currentRoom) {
             showError('لا توجد غرفة نشطة.');
@@ -914,24 +909,28 @@
         evaluateAndSave(currentRoom);
     });
 
+    // نسخ الرابط
     copyLinkBtn.addEventListener('click', function() {
         inviteLink.select();
         document.execCommand('copy');
         alert('تم نسخ الرابط!');
     });
 
+    // مشاركة عبر واتساب
     whatsappShareBtn.addEventListener('click', function() {
         const link = inviteLink.value;
         const text = encodeURIComponent('انضم إلى تحدي محاسبة التكاليف! الرابط: ' + link);
         window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
     });
 
+    // مشاركة عبر تيليجرام
     telegramShareBtn.addEventListener('click', function() {
         const link = inviteLink.value;
         const text = encodeURIComponent('انضم إلى تحدي محاسبة التكاليف! الرابط: ' + link);
         window.open('https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + text, '_blank');
     });
 
+    // إعادة تعيين الدرجات
     resetScoresBtn.addEventListener('click', function() {
         if (!isRoomCreator) {
             showError('فقط منشئ الغرفة يمكنه إعادة تعيين الدرجات.');
@@ -942,10 +941,11 @@
         }
     });
 
+    // الخروج من الغرفة
     exitRoomBtn.addEventListener('click', exitRoom);
 
     // ============================================================
-    //  أحداث الدليل (الزر العائم والنافذة المنبثقة)
+    //  أحداث الدليل (الزر العائم)
     // ============================================================
     helpFab.addEventListener('click', function() {
         helpModal.classList.add('active');
@@ -958,17 +958,11 @@
     }
 
     closeHelpModal.addEventListener('click', closeModal);
-
     helpModal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
+        if (e.target === this) closeModal();
     });
-
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && helpModal.classList.contains('active')) {
-            closeModal();
-        }
+        if (e.key === 'Escape' && helpModal.classList.contains('active')) closeModal();
     });
 
     // ============================================================
@@ -977,9 +971,10 @@
     window.addEventListener('load', function() {
         const params = new URLSearchParams(window.location.search);
         const room = params.get('room');
-        if (room) {
+        if (room && /^\d{4}$/.test(room)) {
             roomCodeInput.value = room;
-            joinRoomBtn.click();
+            // محاولة الانضمام تلقائياً
+            setTimeout(() => joinRoomBtn.click(), 300);
         }
         myTeamNameInput.value = 'فريق ' + (Math.random().toString(36).substring(2,5).toUpperCase());
     });
