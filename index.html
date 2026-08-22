@@ -544,7 +544,7 @@
 
     function resetAllScores(roomId) {
         const teamsRef = database.ref('rooms/' + roomId + '/teams');
-        teamsRef.once('value', (snap) => {
+        teamsRef.once('value').then((snap) => {
             const data = snap.val();
             if (!data) return;
             const updates = {};
@@ -553,8 +553,11 @@
                 updates[tid + '/correct'] = 0;
                 updates[tid + '/total'] = 0;
             }
-            teamsRef.update(updates);
+            return teamsRef.update(updates);
+        }).then(() => {
             showResult(['<div class="step"><strong>🔄 تم إعادة تعيين جميع الدرجات.</strong></div>'], '📌 جميع الدرجات أعيدت إلى الصفر.');
+        }).catch((err) => {
+            showError('تعذّر إعادة تعيين الدرجات: ' + err.message);
         });
     }
 
@@ -562,12 +565,12 @@
         const teamsRef = database.ref('rooms/' + roomId + '/teams');
         const questionsRef = database.ref('rooms/' + roomId + '/questions');
 
-        questionsRef.once('value', (snap) => {
+        questionsRef.once('value').then((snap) => {
             const qData = snap.val();
             if (!qData) return;
             const questions = Object.values(qData);
 
-            teamsRef.once('value', (snap) => {
+            teamsRef.once('value').then((snap) => {
                 const teamsData = snap.val();
                 if (!teamsData) return;
                 const updates = {};
@@ -585,26 +588,32 @@
                     updates[tid + '/total'] = total;
                     updates[tid + '/score'] = score;
                 }
-                teamsRef.update(updates, () => {
-                    teamsRef.once('value', (snap2) => {
-                        const updated = snap2.val();
-                        let best = null, bestId = null;
-                        for (let tid in updated) {
-                            if (best === null || updated[tid].score > best) {
-                                best = updated[tid].score;
-                                bestId = tid;
-                            }
+                teamsRef.update(updates).then(() => {
+                    return teamsRef.once('value');
+                }).then((snap2) => {
+                    const updated = snap2.val();
+                    let best = null, bestId = null;
+                    for (let tid in updated) {
+                        if (best === null || updated[tid].score > best) {
+                            best = updated[tid].score;
+                            bestId = tid;
                         }
-                        if (bestId && best > 0) {
-                            database.ref('rooms/' + roomId + '/teams/' + bestId + '/score').transaction((current) => (current || 0) + 5);
-                        }
-                    });
+                    }
+                    if (bestId && best > 0) {
+                        database.ref('rooms/' + roomId + '/teams/' + bestId + '/score').transaction((current) => (current || 0) + 5);
+                    }
+                    showResult(
+                        [`<div class="step"><strong>✅ تم تقييم الإجابات!</strong><br>تم تحديث الدرجات في لوحة المتصدرين.</div>`],
+                        '🎯 انظر إلى لوحة المتصدرين لمعرفة النتائج.'
+                    );
+                }).catch((err) => {
+                    showError('تعذّر حفظ نتائج التقييم: ' + err.message);
                 });
-                showResult(
-                    [`<div class="step"><strong>✅ تم تقييم الإجابات!</strong><br>تم تحديث الدرجات في لوحة المتصدرين.</div>`],
-                    '🎯 انظر إلى لوحة المتصدرين لمعرفة النتائج.'
-                );
+            }).catch((err) => {
+                showError('تعذّر جلب بيانات الفرق: ' + err.message);
             });
+        }).catch((err) => {
+            showError('تعذّر جلب الأسئلة: ' + err.message);
         });
     }
 
@@ -686,9 +695,11 @@
                 }
                 select.addEventListener('change', function() {
                     const idx = parseInt(this.dataset.index);
-                    const tid = parseInt(this.dataset.teamId);
+                    const tid = this.dataset.teamId; // معرف الفريق نص (base36) وليس رقم، لا نستخدم parseInt هنا
                     const choice = this.value;
-                    saveAnswer(currentRoom, idx, tid, choice);
+                    saveAnswer(currentRoom, idx, tid, choice).catch(err => {
+                        showError('تعذّر حفظ الإجابة: ' + err.message);
+                    });
                     if (!challengeItems[idx].userChoices) challengeItems[idx].userChoices = {};
                     challengeItems[idx].userChoices[tid] = choice;
                     resultBox.classList.remove('show');
@@ -819,7 +830,7 @@
         }
 
         // التحقق من عدم وجود الغرفة
-        database.ref('rooms/' + code).once('value', (snap) => {
+        database.ref('rooms/' + code).once('value').then((snap) => {
             if (snap.exists()) {
                 showError('هذه الغرفة موجودة بالفعل. اختر رمزاً آخر.');
                 return;
@@ -829,13 +840,13 @@
                 teams: {},
                 questions: {}
             };
-            database.ref('rooms/' + code).set(roomData, (err) => {
-                if (err) {
-                    showError('حدث خطأ في Firebase: ' + err.message);
-                } else {
-                    enterRoom(code, true);
-                }
+            database.ref('rooms/' + code).set(roomData).then(() => {
+                enterRoom(code, true);
+            }).catch((err) => {
+                showError('حدث خطأ في Firebase أثناء إنشاء الغرفة: ' + err.message);
             });
+        }).catch((err) => {
+            showError('تعذّر الاتصال بقاعدة البيانات: ' + err.message + ' (تحقق من قواعد الأمان Security Rules في Firebase)');
         });
     });
 
@@ -846,12 +857,14 @@
             showError('الرمز يجب أن يكون 4 أرقام فقط (مثال: 1234).');
             return;
         }
-        database.ref('rooms/' + code).once('value', (snap) => {
+        database.ref('rooms/' + code).once('value').then((snap) => {
             if (!snap.exists()) {
                 showError('الغرفة غير موجودة. تأكد من الرمز.');
                 return;
             }
             enterRoom(code, false);
+        }).catch((err) => {
+            showError('تعذّر الاتصال بقاعدة البيانات: ' + err.message + ' (تحقق من قواعد الأمان Security Rules في Firebase)');
         });
     });
 
