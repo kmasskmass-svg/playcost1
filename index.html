@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي محاسبة التكاليف – متعدد الفرق</title>
+
+    <!-- إضافة Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,sans-serif; }
+        body { background:linear-gradient(135deg,#0f2027,#203a43,#2c5364); min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; }
+        .app-container { background:rgba(255,255,255,0.95); border-radius:24px; padding:30px 35px; max-width:1050px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.5); position:relative; }
+        
+        /* رأس التطبيق مع اسم المعد */
+        .app-header { text-align:center; border-bottom:2px solid #e0e7ef; padding-bottom:12px; margin-bottom:20px; }
+        .app-header h1 { color:#0f2027; font-size:28px; margin-bottom:2px; }
+        .app-header .author { color:#2c5364; font-size:16px; font-weight:600; letter-spacing:0.5px; }
+        .app-header .author span { color:#1a4a5a; }
+        
+        .subtitle { text-align:center; color:#2c5364; font-size:16px; margin-bottom:15px; }
+        .unit-title { text-align:center; font-size:22px; font-weight:700; color:#1a4a5a; margin:10px 0 15px; padding:10px; background:linear-gradient(135deg,#e8f0f5,#d4e2ed); border-radius:14px; border-right:6px solid #2c5364; }
+        .form-group { margin-bottom:18px; }
+        label { display:block; font-weight:600; color:#1e2b37; margin-bottom:5px; }
+        select, input { width:100%; padding:12px 16px; border:2px solid #d0d9e4; border-radius:12px; font-size:15px; background:#f8fafc; transition:0.2s; outline:none; color:#1e2b37; }
+        select:focus, input:focus { border-color:#2c5364; background:#fff; box-shadow:0 0 0 4px rgba(44,83,100,0.15); }
+        .btn { padding:12px 20px; background:linear-gradient(135deg,#1e2b37,#2c5364); color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; transition:0.25s; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(44,83,100,0.35); }
+        .btn-success { background:linear-gradient(135deg,#0d6e4a,#199473); }
+        .btn-warning { background:linear-gradient(135deg,#a06b1a,#c98d2a); }
+        .btn-generate { background:linear-gradient(135deg,#1a4a5a,#2d7a8a); }
+        .btn-danger { background:linear-gradient(135deg,#9b1c1c,#c0392b); }
+        .btn-sm { padding:6px 14px; font-size:13px; }
+        .room-setup { background:#f0f4f9; border-radius:16px; padding:20px; margin-bottom:20px; }
+        .room-setup .input-row { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+        .team-card { background:#fff; border-radius:14px; padding:15px 20px; margin-bottom:15px; border:2px solid #e2e8f0; }
+        .team-card.lead { border-color:#daa520; box-shadow:0 0 20px rgba(218,165,32,0.2); }
+        .team-card .team-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+        .team-card .team-name { font-size:20px; font-weight:700; color:#0f2027; }
+        .team-card .team-score { font-size:24px; font-weight:700; color:#2c5364; }
+        .team-card .team-score span { color:#daa520; }
+        .team-card .team-progress { height:8px; background:#e2e8f0; border-radius:10px; margin-top:10px; overflow:hidden; }
+        .team-card .team-progress .fill { height:100%; border-radius:10px; background:linear-gradient(90deg,#2c5364,#4a8ba0); transition:width 0.6s ease; }
+        .team-card .team-badge { font-size:14px; padding:4px 14px; border-radius:30px; font-weight:600; }
+        .badge-gold { background:#fef3c7; color:#92400e; }
+        .badge-silver { background:#e5e7eb; color:#374151; }
+        .badge-bronze { background:#fed7aa; color:#9a3412; }
+        .exercise-item { background:#fff; padding:15px 18px; border-radius:12px; margin-bottom:12px; border:1px solid #e2e8f0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:15px; }
+        .exercise-item .cost-name { font-size:17px; font-weight:600; color:#0f2027; flex:1; min-width:140px; }
+        .exercise-item select { width:auto; min-width:150px; padding:8px 14px; border-radius:30px; background:#f8fafc; border:2px solid #d0d9e4; font-weight:500; }
+        .exercise-item .result-badge { font-size:14px; padding:4px 14px; border-radius:30px; font-weight:600; min-width:70px; text-align:center; }
+        .badge-correct { background:#d1fae5; color:#065f46; }
+        .badge-wrong { background:#fee2e2; color:#991b1b; }
+        .badge-pending { background:#f3f4f6; color:#4b5563; }
+        .result-box { margin-top:25px; background:#f0f4f9; border-radius:16px; padding:20px 25px; border-right:6px solid #2c5364; display:none; animation:fadeSlide 0.4s ease; }
+        .result-box.show { display:block; }
+        @keyframes fadeSlide { 0%{opacity:0;transform:translateY(12px);} 100%{opacity:1;transform:translateY(0);} }
+        .final-answer { background:#1e2b37; color:#fff; padding:14px 18px; border-radius:12px; font-size:18px; font-weight:700; text-align:center; margin-top:10px; }
+        .error { color:#b91c1c; background:#fee2e2; padding:12px; border-radius:12px; border:1px solid #fecaca; margin-top:15px; display:none; }
+        .error.show { display:block; }
+        .flex-between { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+        .step { background:#fff; padding:12px 16px; border-radius:10px; margin-bottom:10px; border:1px solid #e2e8f0; }
+        .podium { display:flex; justify-content:center; align-items:flex-end; gap:30px; padding:20px 0; min-height:200px; flex-wrap:wrap; }
+        .podium-item { text-align:center; padding:10px 20px; border-radius:12px 12px 0 0; min-width:120px; }
+        .podium-item.first { background:linear-gradient(180deg,#fbbf24,#f59e0b); padding-bottom:30px; min-height:160px; }
+        .podium-item.second { background:linear-gradient(180deg,#d1d5db,#9ca3af); padding-bottom:20px; min-height:120px; }
+        .podium-item.third { background:linear-gradient(180deg,#fca5a5,#ef4444); padding-bottom:15px; min-height:90px; }
+        .podium-item .rank { font-size:32px; font-weight:900; }
+        .podium-item .pname { font-size:18px; font-weight:700; }
+        .podium-item .pscore { font-size:22px; font-weight:700; }
+        .share-box { background:#e8edf5; padding:12px 18px; border-radius:12px; border:2px dashed #2c5364; margin:10px 0; display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+        .share-box input { flex:1; min-width:160px; border:none; background:transparent; font-size:15px; color:#0f2027; padding:6px 10px; }
+        .share-box .btn { padding:6px 16px; font-size:13px; }
+        .share-buttons { display:flex; gap:8px; flex-wrap:wrap; }
+        .share-buttons .btn { padding:6px 12px; font-size:13px; }
+        .btn-whatsapp { background:#25D366; }
+        .btn-telegram { background:#0088cc; }
+        .score-control { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+        .score-control input { width:80px; padding:6px 10px; font-size:14px; }
+
+        /* ===== الزر العائم ===== */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #1a4a5a, #2d7a8a);
+            color: #fff;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+            font-size: 32px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .fab:hover {
+            transform: scale(1.1) rotate(-8deg);
+            box-shadow: 0 12px 35px rgba(44,83,100,0.5);
+        }
+        .fab:active { transform: scale(0.9); }
+
+        /* ===== نافذة الدليل ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: #fff;
+            border-radius: 24px;
+            max-width: 720px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px 35px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            position: relative;
+            animation: modalFade 0.3s ease;
+        }
+        @keyframes modalFade {
+            0% { opacity:0; transform:scale(0.95) translateY(20px); }
+            100% { opacity:1; transform:scale(1) translateY(0); }
+        }
+        .modal-box .close-modal {
+            position: sticky;
+            top: 0;
+            float: left;
+            background: #fee2e2;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #991b1b;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .modal-box .close-modal:hover { background:#fecaca; transform:rotate(90deg); }
+        .modal-box h2 { color:#0f2027; font-size:26px; border-bottom:3px solid #2c5364; padding-bottom:10px; margin-bottom:20px; }
+        .modal-box h3 { color:#1a4a5a; margin:18px 0 8px; font-size:20px; }
+        .modal-box h4 { color:#2c5364; margin:14px 0 6px; font-size:17px; }
+        .modal-box p, .modal-box li { color:#1e2b37; line-height:1.8; font-size:15px; }
+        .modal-box ul { padding-right:25px; margin-bottom:10px; }
+        .modal-box .highlight { background:#e8f0f5; padding:12px 16px; border-radius:12px; border-right:4px solid #2c5364; margin:10px 0; }
+        .modal-box .contact { background:#f0f4f9; padding:15px; border-radius:12px; text-align:center; margin:15px 0; border:2px dashed #2c5364; }
+        .modal-box .contact a { color:#2c5364; font-weight:700; text-decoration:none; }
+        .modal-box .contact a:hover { text-decoration:underline; }
+
+        @media (max-width:600px) {
+            .app-container { padding:20px; }
+            .input-row { grid-template-columns:1fr; }
+            .exercise-item { flex-direction:column; align-items:stretch; }
+            .exercise-item select { width:100%; }
+            .podium { flex-direction:column; align-items:center; }
+            .podium-item { width:100%; border-radius:12px; min-height:auto; padding:15px; }
+            .share-box { flex-direction:column; align-items:stretch; }
+            .modal-box { padding:20px; }
+            .fab { width:56px; height:56px; font-size:26px; bottom:20px; left:20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- ===== رأس التطبيق مع اسم المعد ===== -->
+    <div class="app-header">
+        <h1>🧾 محاسبة التكاليف</h1>
+        <div class="author">✍️ إعداد: <span>كليب بن أحمد الزهراني</span></div>
+    </div>
+
+    <div class="subtitle">نظام التحدي متعدد الفرق – الوحدة الأولى</div>
+    <div class="unit-title">📚 الوحدة الأولى: مفهوم التكاليف وتبويباتها</div>
+
+    <!-- ========================================================== -->
+    <!-- شاشة الدخول: إنشاء غرفة أو الانضمام -->
+    <!-- ========================================================== -->
+    <div id="roomScreen">
+        <div class="room-setup">
+            <h3 style="margin-bottom:15px; color:#0f2027;">🏠 غرفة التحدي</h3>
+            <div class="input-row">
+                <div class="form-group">
+                    <label>🔑 رمز الغرفة (اختر رمزاً أو اتركه عشوائياً):</label>
+                    <input type="text" id="roomCodeInput" placeholder="أدخل رمزاً من اختيارك (مثل: CHALLENGE2025)" style="direction:ltr; text-align:left;">
+                </div>
+                <div class="form-group" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                    <button class="btn btn-success" id="createRoomBtn" style="flex:1;">🆕 إنشاء غرفة بهذا الرمز</button>
+                    <button class="btn btn-generate" id="joinRoomBtn" style="flex:1;">🚪 انضم للغرفة</button>
+                </div>
+            </div>
+            <div id="roomStatus" style="margin-top:10px; color:#2c5364; font-weight:500;"></div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- واجهة التحدي (تظهر بعد الدخول للغرفة) -->
+    <!-- ========================================================== -->
+    <div id="challengeInterface" style="display:none;">
+
+        <!-- اختيار النشاط ونوع المسألة -->
+        <div class="form-group">
+            <label for="activityType">🏢 اختر نوع النشاط الاقتصادي:</label>
+            <select id="activityType">
+                <option value="cafe">☕ كوفي شوب</option>
+                <option value="carpentry" selected>🪚 ورشة نجارة</option>
+                <option value="factory">🏭 مصنع ملابس</option>
+                <option value="restaurant">🍽️ مطعم</option>
+                <option value="bakery">🥖 مخبز</option>
+                <option value="workshop">🔧 ورشة صيانة سيارات</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="problemType">📌 اختر نوع المسألة:</label>
+            <select id="problemType">
+                <option value="1">تبويب التكاليف إلى مباشرة وغير مباشرة</option>
+                <option value="2">تبويب التكاليف إلى متغيرة وثابتة</option>
+                <option value="3">تحليل التكاليف شبه المتغيرة (أعلى وأدنى مستوى)</option>
+                <option value="4">حساب معادلة التكاليف (ص = أ + ب س)</option>
+            </select>
+        </div>
+
+        <!-- إعداد الفريق الحالي -->
+        <div class="room-setup">
+            <h3 style="margin-bottom:10px;">👤 بيانات فريقك</h3>
+            <div class="input-row">
+                <div class="form-group">
+                    <label>🏷️ اسم فريقك:</label>
+                    <input type="text" id="myTeamName" placeholder="اسم الفريق">
+                </div>
+                <div class="form-group" style="display:flex; gap:10px; align-items:flex-end;">
+                    <button class="btn btn-success" id="setTeamBtn" style="flex:1;">✅ تسجيل الفريق</button>
+                </div>
+            </div>
+            <div id="teamStatus" style="margin-top:8px; color:#0f2027; font-weight:500;"></div>
+        </div>
+
+        <!-- روابط المشاركة -->
+        <div class="share-box">
+            <span style="font-weight:600;">🔗 رابط الدعوة:</span>
+            <input type="text" id="inviteLink" readonly>
+            <button class="btn" id="copyLinkBtn">📋 نسخ</button>
+            <div class="share-buttons">
+                <button class="btn btn-whatsapp" id="whatsappShareBtn">💬 واتساب</button>
+                <button class="btn btn-telegram" id="telegramShareBtn">📨 تيليجرام</button>
+            </div>
+        </div>
+
+        <!-- لوحة المتصدرين -->
+        <div id="leaderboard">
+            <h3 style="margin:15px 0 10px;">🏆 لوحة المتصدرين</h3>
+            <div id="podiumContainer" class="podium"></div>
+            <div id="teamsContainer"></div>
+        </div>
+
+        <!-- أسئلة التحدي -->
+        <div id="challengeQuestions" style="margin-top:20px;">
+            <div class="flex-between">
+                <h3 style="color:#0f2027;">📝 أسئلة التحدي</h3>
+                <button class="btn btn-generate" id="generateChallengeBtn" style="padding:8px 18px; font-size:14px;">🎲 توليد أسئلة جديدة</button>
+            </div>
+            <div id="challengeItemsContainer"></div>
+            <div id="challengeActions" style="display:none; margin-top:15px;">
+                <button class="btn btn-success" id="submitChallengeBtn">✅ تقديم الإجابات</button>
+            </div>
+        </div>
+
+        <!-- التحكم في الدرجات (للمنشئ فقط) -->
+        <div id="scoreControlArea" style="display:none; margin-top:20px; background:#f0f4f9; border-radius:16px; padding:20px;">
+            <h3 style="margin-bottom:10px;">🎛️ التحكم في درجات الفرق (للمنشئ فقط)</h3>
+            <div id="scoreControlContainer"></div>
+            <button class="btn btn-warning" id="resetScoresBtn" style="margin-top:10px;">🔄 إعادة تعيين جميع الدرجات</button>
+        </div>
+
+        <!-- زر الخروج -->
+        <button class="btn btn-danger" id="exitRoomBtn" style="margin-top:20px; width:auto; padding:10px 30px;">🚪 الخروج من الغرفة</button>
+    </div>
+
+    <!-- عرض الأخطاء -->
+    <div id="errorBox" class="error"></div>
+
+    <!-- عرض النتيجة -->
+    <div id="resultBox" class="result-box">
+        <h3>📊 النتيجة</h3>
+        <div id="stepsContainer"></div>
+        <div id="finalAnswer" class="final-answer"></div>
+    </div>
+
+</div>
+
+<!-- ========================================================== -->
+<!-- الزر العائم (FAB) -->
+<!-- ========================================================== -->
+<button class="fab" id="helpFab" aria-label="دليل المستخدم">📘</button>
+
+<!-- ========================================================== -->
+<!-- نافذة الدليل المنبثقة (Modal) -->
+<!-- ========================================================== -->
+<div class="modal-overlay" id="helpModal">
+    <div class="modal-box">
+        <button class="close-modal" id="closeHelpModal">✕</button>
+        <h2>📘 دليل المستخدم الشامل</h2>
+        <p style="font-size:16px; color:#1e2b37; margin-bottom:10px;">
+            📧 للتواصل والدعم: <a href="mailto:kmasskmass@gmail.com" style="color:#2c5364; font-weight:700;">kmasskmass@gmail.com</a>
+        </p>
+
+        <h3>🎯 نظرة عامة عن التطبيق</h3>
+        <p>هذا التطبيق التفاعلي صُمم خصيصاً لمساعدة طلاب ومدربي مادة <strong>محاسبة التكاليف (الوحدة الأولى: مفهوم التكاليف وتبويباتها)</strong> على فهم الفرق بين <strong>التكاليف المباشرة وغير المباشرة</strong> بطريقة عملية وممتعة.</p>
+        <p>الميزة الأهم هي <strong>التحدي الجماعي عبر الإنترنت</strong>، حيث يمكن للمدرب إنشاء غرفة خاصة، وتوليد أسئلة تناسب نشاطاً اقتصادياً معيناً (كوفي شوب، ورشة نجارة، مصنع ملابس، إلخ)، ثم يدعو الطلاب للانضمام عبر روابط مباشرة (واتساب، تيليجرام). يتنافس الطلاب (فرق) فيما بينهم بتصنيف التكاليف، وتُحتسب النقاط لحظياً، مع إمكانية للمدرب للتحكم الكامل بالدرجات.</p>
+
+        <h3>📂 خطوات تشغيل التطبيق (للمدرب/المعلم)</h3>
+        <h4>1. الحصول على ملف التطبيق</h4>
+        <p>تم تزويدك بكود HTML كامل. احفظه باسم <code>index.html</code>.</p>
+        <h4>2. رفع الملف على الإنترنت</h4>
+        <p>اسحب الملف إلى أي استضافة مجانية مثل <a href="https://app.netlify.com/drop" target="_blank">Netlify Drop</a> أو استخدم GitHub Pages.</p>
+        <h4>3. التأكد من اتصال Firebase</h4>
+        <p>الكود يحتوي بالفعل على إعدادات Firebase الصحيحة. لا تحتاج إلى تعديل.</p>
+
+        <h3>🧑‍🏫 دليل الاستخدام خطوة بخطوة (للمنشئ)</h3>
+        <h4>الخطوة الأولى: إنشاء الغرفة</h4>
+        <ul>
+            <li>افتح الرابط.</li>
+            <li>في حقل "🔑 رمز الغرفة": اكتب رمزاً من اختيارك (مثل <code>ACCOUNTING101</code>) أو اتركه فارغاً ليولد تلقائياً.</li>
+            <li>اضغط <strong>"🆕 إنشاء غرفة بهذا الرمز"</strong>.</li>
+        </ul>
+        <h4>الخطوة الثانية: إعداد التحدي</h4>
+        <ul>
+            <li>اختر نوع النشاط الاقتصادي (كوفي شوب، ورشة نجارة، إلخ).</li>
+            <li>اختر نوع المسألة (الوحدة الأولى حالياً تدعم التبويب مباشر/غير مباشر).</li>
+            <li>اضغط <strong>"🎲 توليد أسئلة جديدة"</strong>.</li>
+        </ul>
+        <h4>الخطوة الثالثة: تسجيل فريقك</h4>
+        <ul>
+            <li>في قسم "👤 بيانات فريقك"، اكتب اسم فريقك.</li>
+            <li>اضغط <strong>"✅ تسجيل الفريق"</strong>.</li>
+        </ul>
+        <h4>الخطوة الرابعة: مشاركة الرابط</h4>
+        <ul>
+            <li>انسخ الرابط من صندوق المشاركة أو استخدم أزرار واتساب/تيليجرام.</li>
+            <li>أرسله للفرق الأخرى.</li>
+        </ul>
+        <h4>الخطوة الخامسة: متابعة التحدي والتحكم بالدرجات</h4>
+        <ul>
+            <li>لوحة المتصدرين تعرض الدرجات لحظياً.</li>
+            <li>في منطقة "🎛️ التحكم في درجات الفرق" يمكنك تعديل الدرجات يدوياً، إضافة أو خصم نقاط، أو إعادة تعيين جميع الدرجات.</li>
+        </ul>
+
+        <h3>👨‍🎓 دليل الاستخدام (لأعضاء الفرق/الطلاب)</h3>
+        <ul>
+            <li>استلم الرابط وافتحه.</li>
+            <li>سيتم تعبئة رمز الغرفة تلقائياً. اضغط <strong>"🚪 انضم للغرفة"</strong>.</li>
+            <li>سجل اسم فريقك.</li>
+            <li>اختر تصنيف كل تكلفة (مباشرة / غير مباشرة) من القائمة المنسدلة.</li>
+            <li>بعد الانتهاء، اضغط <strong>"✅ تقديم الإجابات"</strong> لحساب النتيجة.</li>
+        </ul>
+
+        <h3>⚙️ الميزات المتقدمة والإدارة</h3>
+        <ul>
+            <li><strong>التحكم الكامل بالأسئلة:</strong> يمكن للمنشئ تغيير النشاط وتوليد أسئلة جديدة في أي وقت.</li>
+            <li><strong>التزامن الفوري:</strong> جميع التغييرات تنعكس على جميع الأجهزة المتصلة في أقل من ثانية.</li>
+            <li><strong>واجهة متجاوبة:</strong> تعمل بشكل مثالي على الجوالات والأجهزة اللوحية.</li>
+            <li><strong>مرونة المشاركة:</strong> الانضمام عبر الرابط دون حاجة لتسجيل دخول.</li>
+        </ul>
+
+        <h3>🔧 استكشاف الأخطاء وإصلاحها</h3>
+        <ul>
+            <li><strong>الغرفة غير موجودة:</strong> تأكد من كتابة الرمز بشكل صحيح.</li>
+            <li><strong>لا تظهر الأسئلة:</strong> تأكد أن المنشئ ضغط على "توليد أسئلة جديدة".</li>
+            <li><strong>زر التوليد غير نشط:</strong> فقط منشئ الغرفة لديه هذه الصلاحية.</li>
+        </ul>
+
+        <h3>📜 سياسة الخصوصية والاستخدام</h3>
+        <ul>
+            <li>التطبيق مخصص للأغراض التعليمية والتدريبية فقط.</li>
+            <li>جميع البيانات تخزن مؤقتاً في Firebase لحين حذف الغرفة من قبل المنشئ.</li>
+            <li>لا يتم مشاركة أو بيع أي بيانات لأطراف خارجية.</li>
+        </ul>
+
+        <div class="contact">
+            <strong>📧 التواصل والدعم</strong><br>
+            البريد الإلكتروني: <a href="mailto:kmasskmass@gmail.com">kmasskmass@gmail.com</a><br>
+            سيتم الرد في أقرب وقت ممكن (خلال 24 ساعة).
+        </div>
+
+        <p style="text-align:center; margin-top:15px; color:#5e6f7e; font-size:14px;">
+            نتمنى لكم تجربة تعليمية ممتعة ومفيدة!<br>
+            <strong>مع تحيات: كليب بن أحمد الزهراني</strong> 🏆
+        </p>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    //  تهيئة Firebase
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyAV9RrLq7RlahKXxi-W1OYczep8YitNe1Q",
+        authDomain: "playcost1.firebaseapp.com",
+        databaseURL: "https://playcost1-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "playcost1",
+        storageBucket: "playcost1.firebasestorage.app",
+        messagingSenderId: "860939957766",
+        appId: "1:860939957766:web:fbbd08f01655e0cc95f587",
+        measurementId: "G-13NGDBYZWW"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // ============================================================
+    //  متغيرات التطبيق
+    // ============================================================
+    let currentRoom = null;
+    let myTeamId = null;
+    let myTeamName = '';
+    let teams = [];
+    let challengeItems = [];
+    let isRoomCreator = false;
+
+    // عناصر الواجهة
+    const roomScreen = document.getElementById('roomScreen');
+    const challengeInterface = document.getElementById('challengeInterface');
+    const roomCodeInput = document.getElementById('roomCodeInput');
+    const createRoomBtn = document.getElementById('createRoomBtn');
+    const joinRoomBtn = document.getElementById('joinRoomBtn');
+    const roomStatus = document.getElementById('roomStatus');
+    const inviteLink = document.getElementById('inviteLink');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const whatsappShareBtn = document.getElementById('whatsappShareBtn');
+    const telegramShareBtn = document.getElementById('telegramShareBtn');
+    const myTeamNameInput = document.getElementById('myTeamName');
+    const setTeamBtn = document.getElementById('setTeamBtn');
+    const teamStatus = document.getElementById('teamStatus');
+    const activityType = document.getElementById('activityType');
+    const problemType = document.getElementById('problemType');
+    const podiumContainer = document.getElementById('podiumContainer');
+    const teamsContainer = document.getElementById('teamsContainer');
+    const challengeItemsContainer = document.getElementById('challengeItemsContainer');
+    const challengeActions = document.getElementById('challengeActions');
+    const generateChallengeBtn = document.getElementById('generateChallengeBtn');
+    const submitChallengeBtn = document.getElementById('submitChallengeBtn');
+    const exitRoomBtn = document.getElementById('exitRoomBtn');
+    const scoreControlArea = document.getElementById('scoreControlArea');
+    const scoreControlContainer = document.getElementById('scoreControlContainer');
+    const resetScoresBtn = document.getElementById('resetScoresBtn');
+    const resultBox = document.getElementById('resultBox');
+    const stepsContainer = document.getElementById('stepsContainer');
+    const finalAnswer = document.getElementById('finalAnswer');
+    const errorBox = document.getElementById('errorBox');
+
+    // عناصر الدليل
+    const helpFab = document.getElementById('helpFab');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpModal = document.getElementById('closeHelpModal');
+
+    // ============================================================
+    //  دوال مساعدة
+    // ============================================================
+    function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.classList.add('show');
+        resultBox.classList.remove('show');
+    }
+    function clearError() {
+        errorBox.classList.remove('show');
+        errorBox.textContent = '';
+    }
+    function showResult(steps, finalText) {
+        stepsContainer.innerHTML = steps.map(s => `<div class="step">${s}</div>`).join('');
+        finalAnswer.innerHTML = finalText;
+        resultBox.classList.add('show');
+        clearError();
+    }
+
+    function getActivityCosts(activityKey) {
+        const data = {
+            cafe: { name:'☕ كوفي شوب', direct:['حبوب القهوة','حليب','سكر','أكواب ورقية','أغطية','أكياس سكر','قشات','مناديل'], indirect:['إيجار المحل','رواتب الباريستا','رواتب الإدارة','كهرباء وماء','استهلاك آلة الإسبريسو','تأمين','دعاية','عمال نظافة','صيانة','مواد تنظيف'] },
+            carpentry: { name:'🪚 ورشة نجارة', direct:['ألواح خشبية','دهانات وورنيش','مسامير وبراغي','أجور نجارين','أجور دهانين','مواد لاصقة','زجاج','مقابض'], indirect:['إيجار الورشة','رواتب مشرفين','كهرباء','استهلاك آلات','تأمين','صيانة','مواد تنظيف','رواتب إدارية','تسويق'] },
+            factory: { name:'🏭 مصنع ملابس', direct:['أقمشة خام','خيوط وزراير','أجور خياطين','أجور قصّارين','سوست وشرائط','بطانات','أشرطة'], indirect:['إيجار المصنع','رواتب مشرفين','كهرباء','استهلاك ماكينات','تأمين','صيانة','مواد تنظيف','رواتب إدارة','شحن وتوزيع'] },
+            restaurant: { name:'🍽️ مطعم', direct:['لحوم ودواجن','خضروات','توابل','زيوت','أرز','مواد تعبئة','أطباق وأكواب'], indirect:['إيجار المطعم','رواتب الطهاة','رواتب النادلات','رواتب الإدارة','كهرباء وماء وغاز','استهلاك المعدات','تأمين','صيانة','دعاية','مواد تنظيف'] },
+            bakery: { name:'🥖 مخبز', direct:['دقيق','خميرة','سكر','زبدة وزيت','بيض','حليب','ملح','مواد تغليف'], indirect:['إيجار المخبز','رواتب الخبازين','رواتب المساعدين','رواتب الإدارة','كهرباء وماء','استهلاك أفران','تأمين','صيانة الأفران','دعاية','مواد تنظيف'] },
+            workshop: { name:'🔧 ورشة سيارات', direct:['زيوت محركات','فلاتر','قطع غيار','زيوت فرامل','مواد تبريد','بطاريات','إطارات','أجور ميكانيكيين','أجور كهربائيين'], indirect:['إيجار الورشة','رواتب مشرفين','كهرباء وماء','استهلاك معدات الرفع','تأمين','صيانة','مواد تنظيف','رواتب إدارية','دعاية'] }
+        };
+        return data[activityKey] || data.carpentry;
+    }
+
+    function shuffleArray(arr) {
+        for (let i = arr.length-1; i>0; i--) {
+            const j = Math.floor(Math.random()*(i+1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function generateQuestions(activityKey) {
+        const costs = getActivityCosts(activityKey);
+        const direct = costs.direct.map(n => ({name:n, type:'direct'}));
+        const indirect = costs.indirect.map(n => ({name:n, type:'indirect'}));
+        const all = shuffleArray([...direct, ...indirect]);
+        const count = Math.min(6, Math.max(4, all.length));
+        return shuffleArray(all).slice(0, count);
+    }
+
+    // ============================================================
+    //  دوال المزامنة مع Firebase
+    // ============================================================
+    function syncRoom(roomId) {
+        const roomRef = database.ref('rooms/' + roomId);
+        roomRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                showError('الغرفة غير موجودة أو تم حذفها.');
+                return;
+            }
+            if (data.teams) {
+                teams = Object.values(data.teams).map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    score: t.score || 0,
+                    total: t.total || 0,
+                    correct: t.correct || 0
+                }));
+                renderLeaderboard();
+                renderScoreControls();
+            }
+            if (data.questions) {
+                const qs = Object.values(data.questions);
+                challengeItems = qs.map(q => {
+                    const item = { name: q.name, correctType: q.correctType, userChoices: {} };
+                    if (q.answers) {
+                        for (let tid in q.answers) {
+                            item.userChoices[tid] = q.answers[tid];
+                        }
+                    }
+                    return item;
+                });
+                renderChallengeQuestions();
+            }
+            const url = new URL(window.location.href);
+            url.searchParams.set('room', roomId);
+            inviteLink.value = url.toString();
+        });
+    }
+
+    function saveTeam(roomId, teamId, teamData) {
+        database.ref('rooms/' + roomId + '/teams/' + teamId).set(teamData);
+    }
+
+    function saveQuestions(roomId, questions) {
+        const qObj = {};
+        questions.forEach((q, i) => {
+            qObj[i] = { name: q.name, correctType: q.correctType };
+        });
+        database.ref('rooms/' + roomId + '/questions').set(qObj);
+    }
+
+    function saveAnswer(roomId, questionIndex, teamId, choice) {
+        database.ref('rooms/' + roomId + '/questions/' + questionIndex + '/answers/' + teamId).set(choice);
+    }
+
+    function updateTeamScore(roomId, teamId, newScore) {
+        database.ref('rooms/' + roomId + '/teams/' + teamId + '/score').set(newScore);
+    }
+
+    function resetAllScores(roomId) {
+        const teamsRef = database.ref('rooms/' + roomId + '/teams');
+        teamsRef.once('value', (snap) => {
+            const data = snap.val();
+            if (!data) return;
+            const updates = {};
+            for (let tid in data) {
+                updates[tid + '/score'] = 0;
+                updates[tid + '/correct'] = 0;
+                updates[tid + '/total'] = 0;
+            }
+            teamsRef.update(updates);
+            showResult(['<div class="step"><strong>🔄 تم إعادة تعيين جميع الدرجات.</strong></div>'], '📌 جميع الدرجات أعيدت إلى الصفر.');
+        });
+    }
+
+    function evaluateAndSave(roomId) {
+        const teamsRef = database.ref('rooms/' + roomId + '/teams');
+        const questionsRef = database.ref('rooms/' + roomId + '/questions');
+
+        questionsRef.once('value', (snap) => {
+            const qData = snap.val();
+            if (!qData) return;
+            const questions = Object.values(qData);
+
+            teamsRef.once('value', (snap) => {
+                const teamsData = snap.val();
+                if (!teamsData) return;
+                const updates = {};
+                for (let tid in teamsData) {
+                    let correct = 0, total = 0;
+                    questions.forEach((q, idx) => {
+                        const answer = q.answers ? q.answers[tid] : null;
+                        if (answer) {
+                            total++;
+                            if (answer === q.correctType) correct++;
+                        }
+                    });
+                    const score = correct * 10;
+                    updates[tid + '/correct'] = correct;
+                    updates[tid + '/total'] = total;
+                    updates[tid + '/score'] = score;
+                }
+                teamsRef.update(updates, () => {
+                    teamsRef.once('value', (snap2) => {
+                        const updated = snap2.val();
+                        let best = null, bestId = null;
+                        for (let tid in updated) {
+                            if (best === null || updated[tid].score > best) {
+                                best = updated[tid].score;
+                                bestId = tid;
+                            }
+                        }
+                        if (bestId && best > 0) {
+                            database.ref('rooms/' + roomId + '/teams/' + bestId + '/score').transaction((current) => (current || 0) + 5);
+                        }
+                    });
+                });
+                showResult(
+                    [`<div class="step"><strong>✅ تم تقييم الإجابات!</strong><br>تم تحديث الدرجات في لوحة المتصدرين.</div>`],
+                    '🎯 انظر إلى لوحة المتصدرين لمعرفة النتائج.'
+                );
+            });
+        });
+    }
+
+    // ============================================================
+    //  دوال عرض الواجهة
+    // ============================================================
+    function renderLeaderboard() {
+        const sorted = [...teams].sort((a,b) => b.score - a.score);
+        let podiumHtml = '';
+        const medals = ['🥇','🥈','🥉'];
+        const classes = ['first','second','third'];
+        sorted.slice(0,3).forEach((team,i) => {
+            podiumHtml += `
+                <div class="podium-item ${classes[i]||''}">
+                    <div class="rank">${medals[i]||''}</div>
+                    <div class="pname">${team.name}</div>
+                    <div class="pscore">${team.score} نقطة</div>
+                </div>
+            `;
+        });
+        podiumContainer.innerHTML = podiumHtml || '<div style="text-align:center;color:#5e6f7e;">لا توجد فرق بعد</div>';
+
+        let cardsHtml = '';
+        sorted.forEach((team, i) => {
+            const isLead = i===0 && team.score>0;
+            const badgeClass = i===0 ? 'badge-gold' : i===1 ? 'badge-silver' : i===2 ? 'badge-bronze' : '';
+            const badgeText = i===0 ? '🥇 متصدر' : i===1 ? '🥈 وصيف' : i===2 ? '🥉 ثالث' : '';
+            const pct = team.total>0 ? Math.round((team.correct/team.total)*100) : 0;
+            cardsHtml += `
+                <div class="team-card ${isLead?'lead':''}">
+                    <div class="team-header">
+                        <span class="team-name">${team.name}</span>
+                        <span class="team-score">⭐ <span>${team.score}</span> نقطة</span>
+                        ${badgeText ? `<span class="team-badge ${badgeClass}">${badgeText}</span>` : ''}
+                    </div>
+                    <div style="font-size:14px;color:#5e6f7e;margin-top:4px;">
+                        إجابات صحيحة: ${team.correct} من ${team.total} (${pct}%)
+                    </div>
+                    <div class="team-progress"><div class="fill" style="width:${Math.min(100,pct)}%;"></div></div>
+                </div>
+            `;
+        });
+        teamsContainer.innerHTML = cardsHtml;
+    }
+
+    function renderChallengeQuestions() {
+        challengeItemsContainer.innerHTML = '';
+        if (!challengeItems || challengeItems.length===0) {
+            challengeItemsContainer.innerHTML = '<div style="color:#5e6f7e;padding:20px;text-align:center;">اضغط على "توليد أسئلة جديدة" لبدء التحدي.</div>';
+            challengeActions.style.display = 'none';
+            return;
+        }
+        challengeActions.style.display = 'block';
+        challengeItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'exercise-item';
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'cost-name';
+            nameSpan.textContent = `${index+1}. ${item.name}`;
+
+            const selectWrapper = document.createElement('div');
+            selectWrapper.style.display = 'flex';
+            selectWrapper.style.flexWrap = 'wrap';
+            selectWrapper.style.gap = '10px';
+            selectWrapper.style.alignItems = 'center';
+
+            teams.forEach(team => {
+                const select = document.createElement('select');
+                select.dataset.teamId = team.id;
+                select.dataset.index = index;
+                select.style.minWidth = '120px';
+                select.innerHTML = `
+                    <option value="">${team.name}</option>
+                    <option value="direct">مباشرة</option>
+                    <option value="indirect">غير مباشرة</option>
+                `;
+                if (item.userChoices && item.userChoices[team.id]) {
+                    select.value = item.userChoices[team.id];
+                }
+                select.addEventListener('change', function() {
+                    const idx = parseInt(this.dataset.index);
+                    const tid = parseInt(this.dataset.teamId);
+                    const choice = this.value;
+                    saveAnswer(currentRoom, idx, tid, choice);
+                    if (!challengeItems[idx].userChoices) challengeItems[idx].userChoices = {};
+                    challengeItems[idx].userChoices[tid] = choice;
+                    resultBox.classList.remove('show');
+                });
+                selectWrapper.appendChild(select);
+            });
+
+            div.appendChild(nameSpan);
+            div.appendChild(selectWrapper);
+            challengeItemsContainer.appendChild(div);
+        });
+    }
+
+    function renderScoreControls() {
+        if (!isRoomCreator) {
+            scoreControlArea.style.display = 'none';
+            return;
+        }
+        scoreControlArea.style.display = 'block';
+        let html = '';
+        teams.forEach(team => {
+            html += `
+                <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap; background:white; padding:10px 15px; border-radius:12px; margin-bottom:8px; border:1px solid #e2e8f0;">
+                    <strong style="min-width:100px;">${team.name}</strong>
+                    <span>الدرجة الحالية: <strong>${team.score}</strong></span>
+                    <div class="score-control">
+                        <input type="number" id="scoreInput_${team.id}" value="${team.score}" min="0" step="5" style="width:90px;">
+                        <button class="btn btn-sm btn-success" onclick="updateScore('${team.id}')">تحديث</button>
+                        <button class="btn btn-sm btn-warning" onclick="addPoints('${team.id}', 5)">+5</button>
+                        <button class="btn btn-sm btn-danger" onclick="addPoints('${team.id}', -5)">-5</button>
+                    </div>
+                </div>
+            `;
+        });
+        scoreControlContainer.innerHTML = html;
+    }
+
+    window.updateScore = function(teamId) {
+        const input = document.getElementById('scoreInput_' + teamId);
+        if (!input) return;
+        const newScore = parseInt(input.value);
+        if (isNaN(newScore) || newScore < 0) {
+            alert('الرجاء إدخال قيمة صحيحة (عدد صحيح غير سالب).');
+            return;
+        }
+        updateTeamScore(currentRoom, teamId, newScore);
+    };
+
+    window.addPoints = function(teamId, points) {
+        const team = teams.find(t => t.id === teamId);
+        if (!team) return;
+        const newScore = Math.max(0, team.score + points);
+        updateTeamScore(currentRoom, teamId, newScore);
+    };
+
+    // ============================================================
+    //  دوال إدارة الغرفة
+    // ============================================================
+    function enterRoom(roomId, asCreator = false) {
+        currentRoom = roomId;
+        isRoomCreator = asCreator;
+        roomScreen.style.display = 'none';
+        challengeInterface.style.display = 'block';
+        syncRoom(roomId);
+        if (asCreator) {
+            const qs = generateQuestions(activityType.value);
+            saveQuestions(roomId, qs);
+            challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
+            renderChallengeQuestions();
+            renderScoreControls();
+        }
+        roomStatus.textContent = `✅ دخلت الغرفة: ${roomId}`;
+        const url = new URL(window.location.href);
+        url.searchParams.set('room', roomId);
+        inviteLink.value = url.toString();
+        teamStatus.textContent = 'يرجى إدخال اسم فريقك والضغط على "تسجيل الفريق".';
+        renderScoreControls();
+    }
+
+    function exitRoom() {
+        if (currentRoom) {
+            database.ref('rooms/' + currentRoom).off();
+            if (isRoomCreator) {
+                if (confirm('هل تريد حذف الغرفة؟')) {
+                    database.ref('rooms/' + currentRoom).remove();
+                }
+            }
+        }
+        currentRoom = null;
+        myTeamId = null;
+        isRoomCreator = false;
+        roomScreen.style.display = 'block';
+        challengeInterface.style.display = 'none';
+        roomStatus.textContent = '';
+        teams = [];
+        challengeItems = [];
+        renderLeaderboard();
+        renderChallengeQuestions();
+        renderScoreControls();
+        resultBox.classList.remove('show');
+        clearError();
+    }
+
+    // ============================================================
+    //  أحداث المستخدم
+    // ============================================================
+
+    createRoomBtn.addEventListener('click', function() {
+        let code = roomCodeInput.value.trim().toUpperCase();
+        if (!code) {
+            code = Math.random().toString(36).substring(2, 8).toUpperCase();
+            roomCodeInput.value = code;
+        }
+        database.ref('rooms/' + code).once('value', (snap) => {
+            if (snap.exists()) {
+                showError('هذه الغرفة موجودة بالفعل. اختر رمزاً آخر.');
+                return;
+            }
+            const roomData = {
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                teams: {},
+                questions: {}
+            };
+            database.ref('rooms/' + code).set(roomData, (err) => {
+                if (err) {
+                    showError('حدث خطأ: ' + err.message);
+                } else {
+                    enterRoom(code, true);
+                }
+            });
+        });
+    });
+
+    joinRoomBtn.addEventListener('click', function() {
+        const code = roomCodeInput.value.trim().toUpperCase();
+        if (!code) {
+            showError('الرجاء إدخال رمز الغرفة.');
+            return;
+        }
+        database.ref('rooms/' + code).once('value', (snap) => {
+            if (!snap.exists()) {
+                showError('الغرفة غير موجودة. تأكد من الرمز.');
+                return;
+            }
+            enterRoom(code, false);
+        });
+    });
+
+    setTeamBtn.addEventListener('click', function() {
+        const name = myTeamNameInput.value.trim();
+        if (!name) {
+            showError('الرجاء إدخال اسم الفريق.');
+            return;
+        }
+        if (!currentRoom) {
+            showError('الرجاء الدخول إلى غرفة أولاً.');
+            return;
+        }
+        myTeamName = name;
+        const teamId = Date.now().toString(36) + Math.random().toString(36).substring(2,5);
+        const teamData = {
+            id: teamId,
+            name: name,
+            score: 0,
+            total: 0,
+            correct: 0
+        };
+        saveTeam(currentRoom, teamId, teamData);
+        myTeamId = teamId;
+        teamStatus.textContent = `✅ تم تسجيل فريق "${name}" بنجاح!`;
+    });
+
+    generateChallengeBtn.addEventListener('click', function() {
+        if (!isRoomCreator) {
+            showError('فقط منشئ الغرفة يمكنه توليد الأسئلة.');
+            return;
+        }
+        const qs = generateQuestions(activityType.value);
+        saveQuestions(currentRoom, qs);
+        challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
+        renderChallengeQuestions();
+        resultBox.classList.remove('show');
+        clearError();
+    });
+
+    submitChallengeBtn.addEventListener('click', function() {
+        if (!currentRoom) {
+            showError('لا توجد غرفة نشطة.');
+            return;
+        }
+        evaluateAndSave(currentRoom);
+    });
+
+    copyLinkBtn.addEventListener('click', function() {
+        inviteLink.select();
+        document.execCommand('copy');
+        alert('تم نسخ الرابط!');
+    });
+
+    whatsappShareBtn.addEventListener('click', function() {
+        const link = inviteLink.value;
+        const text = encodeURIComponent('انضم إلى تحدي محاسبة التكاليف! الرابط: ' + link);
+        window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
+    });
+
+    telegramShareBtn.addEventListener('click', function() {
+        const link = inviteLink.value;
+        const text = encodeURIComponent('انضم إلى تحدي محاسبة التكاليف! الرابط: ' + link);
+        window.open('https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + text, '_blank');
+    });
+
+    resetScoresBtn.addEventListener('click', function() {
+        if (!isRoomCreator) {
+            showError('فقط منشئ الغرفة يمكنه إعادة تعيين الدرجات.');
+            return;
+        }
+        if (confirm('هل أنت متأكد من إعادة تعيين جميع الدرجات؟')) {
+            resetAllScores(currentRoom);
+        }
+    });
+
+    exitRoomBtn.addEventListener('click', exitRoom);
+
+    // ============================================================
+    //  أحداث الدليل (الزر العائم والنافذة المنبثقة)
+    // ============================================================
+    helpFab.addEventListener('click', function() {
+        helpModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+
+    function closeModal() {
+        helpModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    closeHelpModal.addEventListener('click', closeModal);
+
+    helpModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && helpModal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    // ============================================================
+    //  تهيئة أولية: التحقق من وجود معامل room في الرابط
+    // ============================================================
+    window.addEventListener('load', function() {
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room');
+        if (room) {
+            roomCodeInput.value = room;
+            joinRoomBtn.click();
+        }
+        myTeamNameInput.value = 'فريق ' + (Math.random().toString(36).substring(2,5).toUpperCase());
+    });
+
+</script>
+</body>
+</html>
