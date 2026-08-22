@@ -504,8 +504,8 @@
 
     function generateQuestions(activityKey) {
         const costs = getActivityCosts(activityKey);
-        const direct = costs.direct.map(n => ({name:n, type:'direct'}));
-        const indirect = costs.indirect.map(n => ({name:n, type:'indirect'}));
+        const direct = costs.direct.map(n => ({name:n, correctType:'direct'}));
+        const indirect = costs.indirect.map(n => ({name:n, correctType:'indirect'}));
         const all = shuffleArray([...direct, ...indirect]);
         const count = Math.min(6, Math.max(4, all.length));
         return shuffleArray(all).slice(0, count);
