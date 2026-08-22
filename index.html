@@ -8,6 +8,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <style>
         /* جميع الأنماط كما هي مع تعديلات بسيطة */
@@ -371,6 +372,9 @@
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+    const auth = firebase.auth();
+    let authReady = false;
+    let pendingAutoJoin = null;
 
     // ============================================================
     //  متغيرات التطبيق
@@ -413,6 +417,40 @@
     const stepsContainer = document.getElementById('stepsContainer');
     const finalAnswer = document.getElementById('finalAnswer');
     const errorBox = document.getElementById('errorBox');
+
+    // ============================================================
+    //  حالة المصادقة (Anonymous Auth) — يجب أن يسجّل المستخدم دخول
+    //  مجهول قبل أي عملية قراءة/كتابة على قاعدة البيانات
+    // ============================================================
+    function setControlsEnabled(enabled) {
+        [createRoomBtn, joinRoomBtn, generateCodeBtn].forEach(btn => {
+            if (btn) btn.disabled = !enabled;
+        });
+    }
+
+    setControlsEnabled(false);
+    roomStatus.textContent = '🔐 جاري تسجيل الدخول، الرجاء الانتظار...';
+
+    auth.onAuthStateChanged(function(user) {
+        if (user) {
+            authReady = true;
+            setControlsEnabled(true);
+            if (roomStatus.textContent.includes('جاري تسجيل الدخول')) {
+                roomStatus.textContent = '';
+            }
+            if (pendingAutoJoin) {
+                const code = pendingAutoJoin;
+                pendingAutoJoin = null;
+                roomCodeInput.value = code;
+                setTimeout(() => joinRoomBtn.click(), 100);
+            }
+        }
+    });
+
+    auth.signInAnonymously().catch(function(err) {
+        showError('تعذّر تسجيل الدخول: ' + err.message + ' (تحقق من تفعيل Anonymous Authentication في Firebase Console)');
+        roomStatus.textContent = '❌ فشل تسجيل الدخول. أعد تحميل الصفحة أو تحقق من الإعدادات.';
+    });
 
     // عناصر الدليل
     const helpFab = document.getElementById('helpFab');
@@ -986,8 +1024,13 @@
         const room = params.get('room');
         if (room && /^\d{4}$/.test(room)) {
             roomCodeInput.value = room;
-            // محاولة الانضمام تلقائياً
-            setTimeout(() => joinRoomBtn.click(), 300);
+            if (authReady) {
+                // المصادقة جاهزة بالفعل، انضم مباشرة
+                setTimeout(() => joinRoomBtn.click(), 300);
+            } else {
+                // ننتظر onAuthStateChanged عشان ينضم تلقائياً
+                pendingAutoJoin = room;
+            }
         }
         myTeamNameInput.value = 'فريق ' + (Math.random().toString(36).substring(2,5).toUpperCase());
     });
