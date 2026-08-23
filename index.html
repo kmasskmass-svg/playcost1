@@ -300,8 +300,8 @@
             <select id="problemType">
                 <option value="1">تبويب التكاليف إلى مباشرة وغير مباشرة</option>
                 <option value="2">تبويب التكاليف إلى متغيرة وثابتة</option>
-                <option value="3" disabled>تحليل التكاليف شبه المتغيرة (أعلى وأدنى مستوى) — قريبًا 🔜</option>
-                <option value="4" disabled>حساب معادلة التكاليف (ص = أ + ب س) — قريبًا 🔜</option>
+                <option value="3">تحليل التكاليف شبه المتغيرة (أعلى وأدنى مستوى)</option>
+                <option value="4">حساب معادلة التكاليف (ص = أ + ب س)</option>
             </select>
         </div>
 
@@ -410,7 +410,13 @@
         <h4>الخطوة الثانية: إعداد التحدي</h4>
         <ul>
             <li>اختر <strong>نوع النشاط الاقتصادي</strong> من القائمة (كوفي شوب، ورشة نجارة، مصنع ملابس، مطعم، مخبز، ورشة صيانة سيارات، صيدلية، عيادة أسنان، مزرعة دواجن، أو شركة نقل) — يحدد قائمة التكاليف المستخدمة في الأسئلة.</li>
-            <li>اختر <strong>نوع المسألة</strong>: "تبويب مباشرة/غير مباشرة" أو "تبويب متغيرة/ثابتة" — كلاهما مُفعّل بالكامل الآن. أما "تحليل شبه المتغيرة" و"معادلة التكاليف" فمُعطّلان مؤقتًا (🔜) لأنهما يحتاجان إدخال أرقام وحسابات وليس مجرد تصنيف.</li>
+            <li>اختر <strong>نوع المسألة</strong> — الأنواع الأربعة كلها مُفعّلة الآن:
+                <ul style="margin-top:6px;">
+                    <li><strong>تبويب مباشرة/غير مباشرة</strong> و<strong>تبويب متغيرة/ثابتة</strong>: أسئلة تصنيف (6-8 بنود، اختيار من قائمة) كما شرحنا أعلاه.</li>
+                    <li><strong>تحليل التكاليف شبه المتغيرة</strong>: تظهر لكل فريق حالة عملية واحدة (جدول بيانات: فترات، حجم نشاط، تكلفة كلية)، ويُطلب من الفريق استخدام <strong>طريقة الأعلى والأدنى</strong> لحساب "التكلفة المتغيرة للوحدة" و"التكلفة الثابتة" وإدخالهما كأرقام.</li>
+                    <li><strong>معادلة التكاليف (ص = أ + ب س)</strong>: تُعرض معادلة تكلفة جاهزة (بقيم أ، ب محددة) ويُطلب من الفريق حساب التكلفة الكلية المتوقعة (ص) عند حجم نشاط معين (س) وإدخالها كرقم.</li>
+                </ul>
+            </li>
             <li>اضغط <strong>"🎲 توليد أسئلة جديدة"</strong> لإنشاء 6-8 أسئلة عشوائية تناسب نوع المسألة المختار من تكاليف النشاط.</li>
             <li>بنك التكاليف موسّع وبكل نشاط تنويع كبير، فبإمكانك توليد جولات متعددة بنفس النشاط والحصول على مزيج مختلف من الأسئلة كل مرة.</li>
             <li>يمكنك الضغط على "توليد أسئلة جديدة" في أي وقت لبدء جولة جديدة بأسئلة مختلفة — هذا يستبدل الأسئلة الحالية للجميع في نفس الغرفة.</li>
@@ -427,14 +433,22 @@
             <li>افتح الرابط المرسل من المنشئ.</li>
             <li>سيظهر رمز الغرفة تلقائياً ويحاول التطبيق الدخول تلقائيًا. إذا لم يحدث، اضغط <strong>"🚪 انضم للغرفة"</strong> يدوياً.</li>
             <li>سجل اسم فريقك (مرة واحدة فقط) واضغط "✅ تسجيل الفريق".</li>
-            <li>لكل سؤال، من القائمة المنسدلة الخاصة بفريقك، اختر التصنيف المناسب حسب نوع المسألة (<strong>"مباشرة/غير مباشرة"</strong> أو <strong>"متغيرة/ثابتة"</strong>) — يمكنك تغيير اختيارك في أي وقت قبل التقديم.</li>
+            <li>حسب نوع المسألة المختار:
+                <ul style="margin-top:6px;">
+                    <li>لأسئلة التصنيف: من القائمة المنسدلة الخاصة بفريقك، اختر التصنيف المناسب (<strong>"مباشرة/غير مباشرة"</strong> أو <strong>"متغيرة/ثابتة"</strong>).</li>
+                    <li>لتحليل شبه المتغيرة: اقرأ جدول البيانات، واحسب واكتب "التكلفة المتغيرة للوحدة" و"التكلفة الثابتة" في حقلي الإدخال الرقميين الخاصين بفريقك.</li>
+                    <li>لمعادلة التكاليف: اقرأ المعادلة المعروضة واحسب التكلفة الكلية المتوقعة، ثم اكتبها في حقل الإدخال الرقمي الخاص بفريقك.</li>
+                </ul>
+                يمكنك تغيير إجابتك في أي وقت قبل التقديم.
+            </li>
             <li>بعد الإجابة على جميع الأسئلة، اضغط <strong>"✅ تقديم الإجابات"</strong> لتقييم إجاباتك وتحديث درجتك في اللوحة.</li>
         </ul>
 
 
         <h3>🏆 نظام النقاط ولوحة المتصدرين</h3>
         <ul>
-            <li>كل إجابة صحيحة = <strong>10 نقاط</strong>.</li>
+            <li>لأسئلة التصنيف: كل إجابة صحيحة = <strong>10 نقاط</strong>.</li>
+            <li>لتحليل شبه المتغيرة أو معادلة التكاليف: الحالة العملية الواحدة تساوي <strong>20 نقطة كحد أقصى</strong>، مقسّمة بالتساوي على عدد البنود المطلوبة (بندان في تحليل الأعلى والأدنى = 10 لكل بند صحيح، أو بند واحد في المعادلة = 20 كاملة). تُقبل الإجابات الرقمية بسماحية بسيطة (هامش خطأ صغير) لتفادي رفض إجابة صحيحة بسبب فرق تقريب بسيط.</li>
             <li>عند الضغط على "تقديم الإجابات"، يُحسب لكل الفرق عدد الإجابات الصحيحة من إجمالي الأسئلة، وتظهر النسبة المئوية وشريط التقدم في بطاقة كل فريق.</li>
             <li>الفريق صاحب أعلى درجة بعد التقييم يحصل على <strong>5 نقاط إضافية (بونص التصدر)</strong>.</li>
             <li>منصة التتويج (🥇🥈🥉) تعرض أعلى 3 فرق تلقائيًا وتتحدث لحظيًا مع كل تحديث للدرجات.</li>
@@ -511,6 +525,7 @@
     let timerEndAt = null;      // الطابع الزمني (ms) لانتهاء الجولة الحالية، أو null بدون مؤقت
     let timerIntervalId = null; // معرف setInterval الخاص بالعدّاد
     let timeIsUp = false;       // هل انتهى وقت الجولة الحالية بالفعل (لمنع تكرار التنفيذ)
+    let currentCaseData = null; // بيانات الحالة العملية الحالية (لنوعي المسألة 3 و4 فقط)
 
     // عناصر الواجهة
     const roomScreen = document.getElementById('roomScreen');
@@ -683,8 +698,75 @@
         }
     }
 
-    function generateQuestions(activityKey, problemTypeValue) {
+    function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function getActivityDisplayName(activityKey) {
+        return getActivityCosts(activityKey).name;
+    }
+
+    // توليد حالة "تحليل التكاليف شبه المتغيرة" بطريقة الأعلى والأدنى
+    function generateHighLowCase(activityKey) {
+        const activityName = getActivityDisplayName(activityKey);
+        const costItemNames = ['تكلفة الصيانة الدورية','تكلفة الكهرباء والماء','تكلفة النقل والشحن','تكلفة الإشراف والعمالة المؤقتة','تكلفة أدوات ومستلزمات التشغيل'];
+        const costItemName = costItemNames[randInt(0, costItemNames.length - 1)];
+        const fixedOptions = [600,800,1000,1200,1500,1800,2000];
+        const rateOptions = [3,4,5,6,7,8,9,10,12,15];
+        const F = fixedOptions[randInt(0, fixedOptions.length - 1)];
+        const B = rateOptions[randInt(0, rateOptions.length - 1)];
+
+        // 4 مستويات نشاط مختلفة (مضاعفات 10 بين 100 و900)
+        const unitsSet = new Set();
+        while (unitsSet.size < 4) unitsSet.add(randInt(10, 90) * 10);
+        const dataPoints = Array.from(unitsSet).map((u, i) => ({
+            label: 'الفترة ' + (i + 1),
+            units: u,
+            cost: F + B * u
+        }));
+        shuffleArray(dataPoints); // ترتيب عرض عشوائي حتى لا يكون الأعلى/الأدنى واضحًا بالجدول
+
+        return {
+            kind: 'highlow',
+            activityName,
+            costItemName,
+            dataPoints,
+            correctVariable: B,
+            correctFixed: F
+        };
+    }
+
+    // توليد حالة "معادلة التكاليف" (ص = أ + ب س) لتوقع تكلفة عند حجم نشاط معين
+    function generateEquationCase(activityKey) {
+        const activityName = getActivityDisplayName(activityKey);
+        const fixedOptions = [500,700,900,1100,1400,1700];
+        const rateOptions = [2,3,4,5,6,7,8,9,10];
+        const unitsOptions = [150,200,250,300,350,400,450,500,600,700,800];
+        const F = fixedOptions[randInt(0, fixedOptions.length - 1)];
+        const B = rateOptions[randInt(0, rateOptions.length - 1)];
+        const X = unitsOptions[randInt(0, unitsOptions.length - 1)];
+        return {
+            kind: 'equation',
+            activityName,
+            fixedCost: F,
+            variableRate: B,
+            units: X,
+            correctPredicted: F + B * X
+        };
+    }
+
+    // الدالة الموحدة لتوليد جولة جديدة حسب نوع المسألة المختار
+    function generateRound(activityKey, problemTypeValue) {
         const ptype = problemTypeValue || '1';
+
+        if (ptype === '3') {
+            return { kind: 'highlow', case: generateHighLowCase(activityKey) };
+        }
+        if (ptype === '4') {
+            return { kind: 'equation', case: generateEquationCase(activityKey) };
+        }
+
+        // النوعان 1 و2: تصنيف بنود (كما كان سابقًا)
         let direct, indirect;
         if (ptype === '2') {
             const costs = getActivityVariableFixed(activityKey);
@@ -697,7 +779,8 @@
         }
         const all = shuffleArray([...direct, ...indirect]);
         const count = Math.min(10, Math.max(6, Math.min(all.length, 8)));
-        return shuffleArray(all).slice(0, Math.min(count, all.length));
+        const items = shuffleArray(all).slice(0, Math.min(count, all.length));
+        return { kind: 'classify', items };
     }
 
     // ============================================================
@@ -745,8 +828,18 @@
                 renderLeaderboard();
                 renderScoreControls();
             }
-            // تحديث الأسئلة
-            if (data.questions) {
+            // تحديث الأسئلة أو الحالة العملية (حسب نوع المسألة الحالي)
+            if (currentProblemType === '3' || currentProblemType === '4') {
+                currentCaseData = data.caseData || null;
+                if (currentCaseData) {
+                    challengeActions.style.display = 'block';
+                    renderCaseChallenge(currentCaseData);
+                } else {
+                    challengeActions.style.display = 'none';
+                    challengeItemsContainer.innerHTML = '<div style="color:#5e6f7e;padding:20px;text-align:center;">اضغط على "توليد أسئلة جديدة" لبدء الحالة العملية.</div>';
+                }
+            } else if (data.questions) {
+                currentCaseData = null;
                 const qs = Object.values(data.questions);
                 challengeItems = qs.map(q => {
                     const item = { name: q.name, correctType: q.correctType, userChoices: {} };
@@ -771,22 +864,42 @@
         return database.ref('rooms/' + roomId + '/teams/' + teamId).set(teamData);
     }
 
-    function saveQuestions(roomId, questions, problemTypeValue, timerDurationSeconds) {
-        const qObj = {};
-        questions.forEach((q, i) => {
-            qObj[i] = { name: q.name, correctType: q.correctType };
-        });
+    function saveRound(roomId, round, problemTypeValue, timerDurationSeconds) {
         const updates = {};
-        updates['/rooms/' + roomId + '/questions'] = qObj;
         updates['/rooms/' + roomId + '/problemType'] = problemTypeValue || '1';
         // 0 أو غير محدد = بدون مؤقت (وقت مفتوح)
         const seconds = parseInt(timerDurationSeconds) || 0;
         updates['/rooms/' + roomId + '/timerEndAt'] = seconds > 0 ? (Date.now() + seconds * 1000) : null;
+
+        if (round.kind === 'classify') {
+            const qObj = {};
+            round.items.forEach((q, i) => {
+                qObj[i] = { name: q.name, correctType: q.correctType };
+            });
+            updates['/rooms/' + roomId + '/questions'] = qObj;
+            updates['/rooms/' + roomId + '/caseData'] = null; // مسح أي حالة عملية قديمة من جولة سابقة
+        } else {
+            updates['/rooms/' + roomId + '/questions'] = null; // مسح أي أسئلة تصنيف قديمة
+            updates['/rooms/' + roomId + '/caseData'] = round.case;
+        }
         return database.ref().update(updates);
     }
 
     function saveAnswer(roomId, questionIndex, teamId, choice) {
         return database.ref('rooms/' + roomId + '/questions/' + questionIndex + '/answers/' + teamId).set(choice);
+    }
+
+    // حفظ إجابة الحالة العملية (نوعي المسألة 3 و4) — تُخزَّن ككائن JSON نصي
+    function saveCaseAnswer(roomId, teamId, answerObj) {
+        return database.ref('rooms/' + roomId + '/caseData/answers/' + teamId).set(JSON.stringify(answerObj));
+    }
+
+    // مقارنة رقمية بسماحية خطأ بسيطة (لتفادي رفض إجابات صحيحة بسبب فروقات تقريب)
+    function isCloseNumber(value, correct, tolerancePct) {
+        if (value === null || value === undefined || isNaN(value)) return false;
+        const pct = tolerancePct || 0.02;
+        const tolerance = Math.max(0.5, Math.abs(correct) * pct);
+        return Math.abs(value - correct) <= tolerance;
     }
 
     function updateTeamScore(roomId, teamId, newScore) {
@@ -813,21 +926,45 @@
     }
 
     function evaluateAndSave(roomId) {
+        const roomRef = database.ref('rooms/' + roomId);
         const teamsRef = database.ref('rooms/' + roomId + '/teams');
-        const questionsRef = database.ref('rooms/' + roomId + '/questions');
 
-        questionsRef.once('value').then((snap) => {
-            const qData = snap.val();
-            if (!qData) return;
-            const questions = Object.values(qData);
+        roomRef.once('value').then((snap) => {
+            const data = snap.val();
+            if (!data || !data.teams) return;
+            const teamsData = data.teams;
+            const ptype = data.problemType || '1';
+            const updates = {};
 
-            teamsRef.once('value').then((snap) => {
-                const teamsData = snap.val();
-                if (!teamsData) return;
-                const updates = {};
+            if (ptype === '3' || ptype === '4') {
+                // تقييم الحالة العملية الرقمية (تحليل شبه المتغيرة أو معادلة التكاليف)
+                const caseData = data.caseData;
+                if (!caseData) return;
                 for (let tid in teamsData) {
                     let correct = 0, total = 0;
-                    questions.forEach((q, idx) => {
+                    let ans = null;
+                    const raw = caseData.answers ? caseData.answers[tid] : null;
+                    try { ans = raw ? JSON.parse(raw) : null; } catch(e) { ans = null; }
+
+                    if (ptype === '3') {
+                        total = 2; // بندان: التكلفة المتغيرة والتكلفة الثابتة
+                        if (ans && isCloseNumber(ans.variable, caseData.correctVariable)) correct++;
+                        if (ans && isCloseNumber(ans.fixed, caseData.correctFixed)) correct++;
+                    } else {
+                        total = 1; // بند واحد: التكلفة الكلية المتوقعة
+                        if (ans && isCloseNumber(ans.predicted, caseData.correctPredicted)) correct++;
+                    }
+                    const score = Math.round((correct / total) * 20); // الحالة الكاملة = 20 نقطة كحد أقصى
+                    updates[tid + '/correct'] = correct;
+                    updates[tid + '/total'] = total;
+                    updates[tid + '/score'] = score;
+                }
+            } else {
+                // تقييم أسئلة التصنيف (مباشرة/غير مباشرة أو متغيرة/ثابتة)
+                const questions = Object.values(data.questions || {});
+                for (let tid in teamsData) {
+                    let correct = 0, total = 0;
+                    questions.forEach((q) => {
                         const answer = q.answers ? q.answers[tid] : null;
                         if (answer) {
                             total++;
@@ -839,32 +976,31 @@
                     updates[tid + '/total'] = total;
                     updates[tid + '/score'] = score;
                 }
-                teamsRef.update(updates).then(() => {
-                    return teamsRef.once('value');
-                }).then((snap2) => {
-                    const updated = snap2.val();
-                    let best = null, bestId = null;
-                    for (let tid in updated) {
-                        if (best === null || updated[tid].score > best) {
-                            best = updated[tid].score;
-                            bestId = tid;
-                        }
+            }
+
+            teamsRef.update(updates).then(() => {
+                return teamsRef.once('value');
+            }).then((snap2) => {
+                const updated = snap2.val();
+                let best = null, bestId = null;
+                for (let tid in updated) {
+                    if (best === null || updated[tid].score > best) {
+                        best = updated[tid].score;
+                        bestId = tid;
                     }
-                    if (bestId && best > 0) {
-                        database.ref('rooms/' + roomId + '/teams/' + bestId + '/score').transaction((current) => (current || 0) + 5);
-                    }
-                    showResult(
-                        [`<div class="step"><strong>✅ تم تقييم الإجابات!</strong><br>تم تحديث الدرجات في لوحة المتصدرين.</div>`],
-                        '🎯 انظر إلى لوحة المتصدرين لمعرفة النتائج.'
-                    );
-                }).catch((err) => {
-                    showError('تعذّر حفظ نتائج التقييم: ' + err.message);
-                });
+                }
+                if (bestId && best > 0) {
+                    database.ref('rooms/' + roomId + '/teams/' + bestId + '/score').transaction((current) => (current || 0) + 5);
+                }
+                showResult(
+                    [`<div class="step"><strong>✅ تم تقييم الإجابات!</strong><br>تم تحديث الدرجات في لوحة المتصدرين.</div>`],
+                    '🎯 انظر إلى لوحة المتصدرين لمعرفة النتائج.'
+                );
             }).catch((err) => {
-                showError('تعذّر جلب بيانات الفرق: ' + err.message);
+                showError('تعذّر حفظ نتائج التقييم: ' + err.message);
             });
         }).catch((err) => {
-            showError('تعذّر جلب الأسئلة: ' + err.message);
+            showError('تعذّر جلب بيانات الغرفة للتقييم: ' + err.message);
         });
     }
 
@@ -978,6 +1114,111 @@
 
         tickTimer();
         timerIntervalId = setInterval(tickTimer, 1000);
+    }
+
+    // عرض الحالة العملية الرقمية (نوعا المسألة 3 و4) بدل قوائم التصنيف
+    function renderCaseChallenge(caseData) {
+        challengeActions.style.display = 'block';
+        let html = '';
+
+        if (caseData.kind === 'highlow') {
+            html += `<div class="exercise-item" style="flex-direction:column;align-items:stretch;">
+                <div class="cost-name" style="margin-bottom:10px;">📊 حالة عملية: ${escapeHtml(caseData.costItemName)} — ${escapeHtml(caseData.activityName)}</div>
+                <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;margin-bottom:15px;min-width:320px;">
+                    <thead>
+                        <tr style="background:#f0f4f9;">
+                            <th style="padding:8px;border:1px solid #d0d9e4;">الفترة</th>
+                            <th style="padding:8px;border:1px solid #d0d9e4;">حجم النشاط (وحدة)</th>
+                            <th style="padding:8px;border:1px solid #d0d9e4;">التكلفة الكلية (ر.س)</th>
+                        </tr>
+                    </thead>
+                    <tbody>` +
+                    caseData.dataPoints.map(dp => `<tr>
+                            <td style="padding:8px;border:1px solid #d0d9e4;text-align:center;">${escapeHtml(dp.label)}</td>
+                            <td style="padding:8px;border:1px solid #d0d9e4;text-align:center;">${dp.units}</td>
+                            <td style="padding:8px;border:1px solid #d0d9e4;text-align:center;">${dp.cost}</td>
+                        </tr>`).join('') +
+                    `</tbody>
+                </table>
+                </div>
+                <div style="color:#5e6f7e;font-size:14px;">💡 استخدم <strong>طريقة الأعلى والأدنى</strong>: حدد أعلى وأدنى حجم نشاط بالجدول، ثم احسب التكلفة المتغيرة للوحدة الواحدة والتكلفة الثابتة الكلية.</div>
+            </div>`;
+
+            teams.forEach(team => {
+                const isOwn = team.id === myTeamId;
+                let saved = null;
+                const raw = caseData.answers ? caseData.answers[team.id] : null;
+                try { saved = raw ? JSON.parse(raw) : null; } catch(e) { saved = null; }
+                const disabledAttr = (!isOwn || timeIsUp) ? 'disabled' : '';
+                html += `<div class="exercise-item">
+                    <span class="cost-name">${escapeHtml(team.name)}${!isOwn ? ' <span style="font-size:12px;color:#94a3b8;">(للعرض فقط)</span>' : ''}</span>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <div>
+                            <label style="font-size:13px;display:block;">التكلفة المتغيرة للوحدة</label>
+                            <input type="number" step="0.01" class="case-input" data-team="${team.id}" data-field="variable"
+                                style="width:120px;" value="${saved && saved.variable != null ? saved.variable : ''}" ${disabledAttr}>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;display:block;">التكلفة الثابتة</label>
+                            <input type="number" step="0.01" class="case-input" data-team="${team.id}" data-field="fixed"
+                                style="width:120px;" value="${saved && saved.fixed != null ? saved.fixed : ''}" ${disabledAttr}>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        } else if (caseData.kind === 'equation') {
+            html += `<div class="exercise-item" style="flex-direction:column;align-items:stretch;">
+                <div class="cost-name" style="margin-bottom:10px;">🧮 معادلة التكاليف — ${escapeHtml(caseData.activityName)}</div>
+                <div style="font-size:17px;background:#f0f4f9;padding:14px 18px;border-radius:12px;margin-bottom:10px;">
+                    معادلة التكلفة: <strong>ص = ${caseData.fixedCost} + ${caseData.variableRate} س</strong>
+                </div>
+                <div style="color:#5e6f7e;font-size:14px;">
+                    إذا كان حجم النشاط المتوقع (س) = <strong>${caseData.units}</strong> وحدة، فما التكلفة الكلية المتوقعة (ص)؟
+                </div>
+            </div>`;
+
+            teams.forEach(team => {
+                const isOwn = team.id === myTeamId;
+                let saved = null;
+                const raw = caseData.answers ? caseData.answers[team.id] : null;
+                try { saved = raw ? JSON.parse(raw) : null; } catch(e) { saved = null; }
+                const disabledAttr = (!isOwn || timeIsUp) ? 'disabled' : '';
+                html += `<div class="exercise-item">
+                    <span class="cost-name">${escapeHtml(team.name)}${!isOwn ? ' <span style="font-size:12px;color:#94a3b8;">(للعرض فقط)</span>' : ''}</span>
+                    <div>
+                        <label style="font-size:13px;display:block;">التكلفة الكلية المتوقعة (ص)</label>
+                        <input type="number" step="0.01" class="case-input" data-team="${team.id}" data-field="predicted"
+                            style="width:140px;" value="${saved && saved.predicted != null ? saved.predicted : ''}" ${disabledAttr}>
+                    </div>
+                </div>`;
+            });
+        }
+
+        challengeItemsContainer.innerHTML = html;
+
+        // ربط الأحداث فقط بحقول فريقك أنت
+        challengeItemsContainer.querySelectorAll('.case-input').forEach(inp => {
+            if (inp.dataset.team !== myTeamId) return;
+            inp.addEventListener('change', function() {
+                saveCaseTeamAnswer();
+            });
+        });
+    }
+
+    // جمع كل حقول فريقي الحالية وحفظها ككائن إجابة واحد
+    function saveCaseTeamAnswer() {
+        if (!myTeamId || !currentRoom) return;
+        const inputs = challengeItemsContainer.querySelectorAll('.case-input[data-team="' + myTeamId + '"]');
+        const answerObj = {};
+        inputs.forEach(inp => {
+            const val = inp.value === '' ? null : parseFloat(inp.value);
+            answerObj[inp.dataset.field] = val;
+        });
+        saveCaseAnswer(currentRoom, myTeamId, answerObj).catch(err => {
+            showError('تعذّر حفظ الإجابة: ' + err.message);
+        });
+        resultBox.classList.remove('show');
     }
 
     function renderChallengeQuestions() {
@@ -1113,11 +1354,18 @@
         challengeInterface.style.display = 'block';
         syncRoom(roomId);
         if (asCreator) {
-            const qs = generateQuestions(activityType.value, problemType.value);
-            saveQuestions(roomId, qs, problemType.value, timerDuration.value).then(() => {
+            const round = generateRound(activityType.value, problemType.value);
+            saveRound(roomId, round, problemType.value, timerDuration.value).then(() => {
                 currentProblemType = problemType.value;
-                challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
-                renderChallengeQuestions();
+                if (round.kind === 'classify') {
+                    currentCaseData = null;
+                    challengeItems = round.items.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
+                    renderChallengeQuestions();
+                } else {
+                    currentCaseData = round.case;
+                    challengeItems = [];
+                    renderCaseChallenge(currentCaseData);
+                }
                 renderScoreControls();
             });
         }
@@ -1297,11 +1545,18 @@
             showError('فقط منشئ الغرفة يمكنه توليد الأسئلة.');
             return;
         }
-        const qs = generateQuestions(activityType.value, problemType.value);
-        saveQuestions(currentRoom, qs, problemType.value, timerDuration.value).then(() => {
+        const round = generateRound(activityType.value, problemType.value);
+        saveRound(currentRoom, round, problemType.value, timerDuration.value).then(() => {
             currentProblemType = problemType.value;
-            challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
-            renderChallengeQuestions();
+            if (round.kind === 'classify') {
+                currentCaseData = null;
+                challengeItems = round.items.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
+                renderChallengeQuestions();
+            } else {
+                currentCaseData = round.case;
+                challengeItems = [];
+                renderCaseChallenge(currentCaseData);
+            }
             resultBox.classList.remove('show');
             clearError();
         }).catch(err => {
