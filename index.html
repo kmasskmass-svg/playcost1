@@ -242,9 +242,13 @@
                     <label>🏷️ اسم فريقك:</label>
                     <input type="text" id="myTeamName" placeholder="اسم الفريق">
                 </div>
-                <div class="form-group" style="display:flex; gap:10px; align-items:flex-end;">
-                    <button class="btn btn-success" id="setTeamBtn" style="flex:1;">✅ تسجيل الفريق</button>
+                <div class="form-group">
+                    <label>👥 أسماء أعضاء الفريق (افصل بينهم بفاصلة ,):</label>
+                    <input type="text" id="myTeamMembers" placeholder="مثال: أحمد، سارة، خالد">
                 </div>
+            </div>
+            <div class="form-group" style="display:flex; gap:10px; align-items:flex-end;">
+                <button class="btn btn-success" id="setTeamBtn" style="flex:1;">✅ تسجيل الفريق</button>
             </div>
             <div id="teamStatus" style="margin-top:8px; color:#0f2027; font-weight:500;"></div>
         </div>
@@ -432,6 +436,7 @@
     const whatsappShareBtn = document.getElementById('whatsappShareBtn');
     const telegramShareBtn = document.getElementById('telegramShareBtn');
     const myTeamNameInput = document.getElementById('myTeamName');
+    const myTeamMembersInput = document.getElementById('myTeamMembers');
     const setTeamBtn = document.getElementById('setTeamBtn');
     const teamStatus = document.getElementById('teamStatus');
     const activityType = document.getElementById('activityType');
@@ -546,6 +551,13 @@
         });
     }
 
+    // تنظيف النصوص المدخلة من المستخدم قبل إدراجها كـ HTML (حماية أساسية)
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = String(str == null ? '' : str);
+        return div.innerHTML;
+    }
+
     function generateQuestions(activityKey) {
         const costs = getActivityCosts(activityKey);
         const direct = costs.direct.map(n => ({name:n, correctType:'direct'}));
@@ -575,10 +587,21 @@
                 teams = Object.values(data.teams).map(t => ({
                     id: t.id,
                     name: t.name,
+                    members: Array.isArray(t.members) ? t.members : [],
                     score: t.score || 0,
                     total: t.total || 0,
                     correct: t.correct || 0
                 }));
+                // استرجاع تلقائي لملكية الفريق لو سبق وسجّل هذا الجهاز نفسه بهذه الغرفة
+                if (!myTeamId && auth.currentUser) {
+                    const ownTeam = teams.find(t => t.id === auth.currentUser.uid);
+                    if (ownTeam) {
+                        myTeamId = ownTeam.id;
+                        myTeamNameInput.value = ownTeam.name;
+                        myTeamMembersInput.value = (ownTeam.members || []).join('، ');
+                        teamStatus.textContent = `✅ فريقك "${ownTeam.name}" مسجل بالفعل في هذه الغرفة.`;
+                    }
+                }
                 renderLeaderboard();
                 renderScoreControls();
             }
@@ -711,7 +734,7 @@
             podiumHtml += `
                 <div class="podium-item ${classes[i]||''}">
                     <div class="rank">${medals[i]||''}</div>
-                    <div class="pname">${team.name}</div>
+                    <div class="pname">${escapeHtml(team.name)}</div>
                     <div class="pscore">${team.score} نقطة</div>
                 </div>
             `;
@@ -724,13 +747,17 @@
             const badgeClass = i===0 ? 'badge-gold' : i===1 ? 'badge-silver' : i===2 ? 'badge-bronze' : '';
             const badgeText = i===0 ? '🥇 متصدر' : i===1 ? '🥈 وصيف' : i===2 ? '🥉 ثالث' : '';
             const pct = team.total>0 ? Math.round((team.correct/team.total)*100) : 0;
+            const membersHtml = (team.members && team.members.length > 0)
+                ? `<div style="font-size:13px;color:#5e6f7e;margin-top:4px;">👥 ${team.members.map(escapeHtml).join('، ')}</div>`
+                : '';
             cardsHtml += `
                 <div class="team-card ${isLead?'lead':''}">
                     <div class="team-header">
-                        <span class="team-name">${team.name}</span>
+                        <span class="team-name">${escapeHtml(team.name)}</span>
                         <span class="team-score">⭐ <span>${team.score}</span> نقطة</span>
                         ${badgeText ? `<span class="team-badge ${badgeClass}">${badgeText}</span>` : ''}
                     </div>
+                    ${membersHtml}
                     <div style="font-size:14px;color:#5e6f7e;margin-top:4px;">
                         إجابات صحيحة: ${team.correct} من ${team.total} (${pct}%)
                     </div>
@@ -763,29 +790,45 @@
             selectWrapper.style.alignItems = 'center';
 
             teams.forEach(team => {
+                const isOwnTeam = team.id === myTeamId;
                 const select = document.createElement('select');
                 select.dataset.teamId = team.id;
                 select.dataset.index = index;
                 select.style.minWidth = '120px';
                 select.innerHTML = `
-                    <option value="">${team.name}</option>
+                    <option value="">${escapeHtml(team.name)}</option>
                     <option value="direct">مباشرة</option>
                     <option value="indirect">غير مباشرة</option>
                 `;
                 if (item.userChoices && item.userChoices[team.id]) {
                     select.value = item.userChoices[team.id];
                 }
-                select.addEventListener('change', function() {
-                    const idx = parseInt(this.dataset.index);
-                    const tid = this.dataset.teamId; // معرف الفريق نص (base36) وليس رقم، لا نستخدم parseInt هنا
-                    const choice = this.value;
-                    saveAnswer(currentRoom, idx, tid, choice).catch(err => {
-                        showError('تعذّر حفظ الإجابة: ' + err.message);
+                if (!isOwnTeam) {
+                    // لا يمكن لأي فريق (ولا حتى منشئ الغرفة) تعديل إجابات فريق آخر — للعرض فقط
+                    select.disabled = true;
+                    select.title = 'إجابة فريق آخر — للعرض فقط، لا يمكن تعديلها';
+                    select.style.opacity = '0.7';
+                    select.style.cursor = 'not-allowed';
+                } else {
+                    select.style.border = '2px solid #2c5364';
+                    select.title = 'إجابة فريقك — يمكنك تعديلها';
+                    select.addEventListener('change', function() {
+                        // تحقق دفاعي إضافي: لا تنفّذ الحفظ إلا لفريقك أنت
+                        if (this.dataset.teamId !== myTeamId) {
+                            showError('غير مسموح بتعديل إجابات فريق آخر.');
+                            return;
+                        }
+                        const idx = parseInt(this.dataset.index);
+                        const tid = this.dataset.teamId; // معرف الفريق نص (base36) وليس رقم، لا نستخدم parseInt هنا
+                        const choice = this.value;
+                        saveAnswer(currentRoom, idx, tid, choice).catch(err => {
+                            showError('تعذّر حفظ الإجابة: ' + err.message);
+                        });
+                        if (!challengeItems[idx].userChoices) challengeItems[idx].userChoices = {};
+                        challengeItems[idx].userChoices[tid] = choice;
+                        resultBox.classList.remove('show');
                     });
-                    if (!challengeItems[idx].userChoices) challengeItems[idx].userChoices = {};
-                    challengeItems[idx].userChoices[tid] = choice;
-                    resultBox.classList.remove('show');
-                });
+                }
                 selectWrapper.appendChild(select);
             });
 
@@ -870,7 +913,14 @@
             roomListeners = [];
             if (isRoomCreator) {
                 if (confirm('هل تريد حذف الغرفة؟')) {
-                    database.ref('rooms/' + currentRoom).remove();
+                    // نمسح الفرق والأسئلة (وبالتبعية كل الإجابات المرتبطة بها)
+                    // بدل حذف عقدة الغرفة بالكامل، لتوافق قواعد الأمان الجديدة
+                    database.ref('rooms/' + currentRoom).update({
+                        teams: null,
+                        questions: null
+                    }).catch(err => {
+                        showError('تعذّر حذف بيانات الغرفة: ' + err.message);
+                    });
                 }
             }
         }
@@ -925,6 +975,7 @@
             }
             const roomData = {
                 createdAt: firebase.database.ServerValue.TIMESTAMP,
+                creatorUid: auth.currentUser ? auth.currentUser.uid : null,
                 teams: {},
                 questions: {}
             };
@@ -960,6 +1011,7 @@
     // تسجيل الفريق
     setTeamBtn.addEventListener('click', function() {
         const name = myTeamNameInput.value.trim();
+        const membersRaw = myTeamMembersInput.value.trim();
         if (!name) {
             showError('الرجاء إدخال اسم الفريق.');
             return;
@@ -968,18 +1020,41 @@
             showError('الرجاء الدخول إلى غرفة أولاً.');
             return;
         }
-        // استخدام معرف فريد للفريق
-        const teamId = Date.now().toString(36) + Math.random().toString(36).substring(2,5);
+        // معالجة أسماء الأعضاء: فصل بالفاصلة العربية أو الإنجليزية وتنظيف الفراغات
+        const members = membersRaw
+            ? membersRaw.split(/[,،]/).map(m => m.trim()).filter(m => m.length > 0)
+            : [];
+
+        // معرف الفريق = هوية تسجيل الدخول (UID) لهذا الجهاز، حتى تُقيَّد صلاحية التعديل
+        // على إجابات هذا الفريق فقط عبر قواعد الأمان في Firebase
+        if (!auth.currentUser) {
+            showError('لم تكتمل عملية تسجيل الدخول بعد. حاول مرة أخرى بعد لحظات.');
+            return;
+        }
+        const teamId = auth.currentUser.uid;
+        const isUpdate = !!myTeamId;
         const teamData = {
             id: teamId,
             name: name,
+            members: members,
             score: 0,
             total: 0,
             correct: 0
         };
+        if (isUpdate) {
+            // حافظ على الدرجة الحالية عند التحديث بدل تصفيرها
+            const existing = teams.find(t => t.id === teamId);
+            if (existing) {
+                teamData.score = existing.score || 0;
+                teamData.total = existing.total || 0;
+                teamData.correct = existing.correct || 0;
+            }
+        }
         saveTeam(currentRoom, teamId, teamData).then(() => {
             myTeamId = teamId;
-            teamStatus.textContent = `✅ تم تسجيل فريق "${name}" بنجاح!`;
+            teamStatus.textContent = isUpdate
+                ? `✅ تم تحديث بيانات فريق "${name}" بنجاح!`
+                : `✅ تم تسجيل فريق "${name}" بنجاح!`;
         }).catch(err => {
             showError('حدث خطأ أثناء تسجيل الفريق: ' + err.message);
         });
