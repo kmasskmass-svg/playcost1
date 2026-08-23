@@ -231,6 +231,14 @@
             animation:btnSpin 0.7s linear infinite;
         }
         @keyframes btnSpin { to { transform:rotate(360deg); } }
+
+        /* المؤقت الزمني */
+        #timerDisplay.warning { background:#fef3c7; color:#92400e; }
+        #timerDisplay.danger { background:#fee2e2; color:#991b1b; animation:timerPulse 1s ease-in-out infinite; }
+        @keyframes timerPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+        @media (max-width:600px) {
+            #timerDisplay { font-size:16px !important; padding:5px 12px !important; }
+        }
     </style>
 </head>
 <body>
@@ -297,6 +305,18 @@
             </select>
         </div>
 
+        <div class="form-group">
+            <label for="timerDuration">⏱️ مدة المؤقت لكل جولة:</label>
+            <select id="timerDuration">
+                <option value="0">بدون مؤقت (وقت مفتوح)</option>
+                <option value="30">30 ثانية</option>
+                <option value="60" selected>60 ثانية</option>
+                <option value="90">90 ثانية</option>
+                <option value="120">دقيقتان</option>
+                <option value="180">3 دقائق</option>
+            </select>
+        </div>
+
         <div class="room-setup">
             <h3 style="margin-bottom:10px;">👤 بيانات فريقك</h3>
             <div class="input-row">
@@ -334,6 +354,7 @@
         <div id="challengeQuestions" style="margin-top:20px;">
             <div class="flex-between">
                 <h3 style="color:#0f2027;">📝 أسئلة التحدي</h3>
+                <div id="timerDisplay" style="display:none; font-size:20px; font-weight:800; color:#2c5364; background:#e8f0f5; padding:6px 18px; border-radius:30px; min-width:90px; text-align:center;">⏱️ --:--</div>
                 <button class="btn btn-generate" id="generateChallengeBtn" style="padding:8px 18px; font-size:14px;">🎲 توليد أسئلة جديدة</button>
             </div>
             <div id="challengeItemsContainer"></div>
@@ -487,6 +508,9 @@
     let isRoomCreator = false;
     let roomListeners = [];
     let currentProblemType = '1'; // نوع المسألة الحالي بالغرفة (1: مباشرة/غير مباشرة، 2: متغيرة/ثابتة)
+    let timerEndAt = null;      // الطابع الزمني (ms) لانتهاء الجولة الحالية، أو null بدون مؤقت
+    let timerIntervalId = null; // معرف setInterval الخاص بالعدّاد
+    let timeIsUp = false;       // هل انتهى وقت الجولة الحالية بالفعل (لمنع تكرار التنفيذ)
 
     // عناصر الواجهة
     const roomScreen = document.getElementById('roomScreen');
@@ -506,6 +530,8 @@
     const teamStatus = document.getElementById('teamStatus');
     const activityType = document.getElementById('activityType');
     const problemType = document.getElementById('problemType');
+    const timerDuration = document.getElementById('timerDuration');
+    const timerDisplay = document.getElementById('timerDisplay');
     const podiumContainer = document.getElementById('podiumContainer');
     const teamsContainer = document.getElementById('teamsContainer');
     const challengeItemsContainer = document.getElementById('challengeItemsContainer');
@@ -694,6 +720,8 @@
                 currentProblemType = data.problemType;
                 if (!isRoomCreator) problemType.value = data.problemType;
             }
+            // مزامنة المؤقت الزمني للجولة الحالية (نفس الموعد لكل الفرق)
+            startOrSyncTimer(data.timerEndAt || null);
             // تحديث الفرق
             if (data.teams) {
                 teams = Object.values(data.teams).map(t => ({
@@ -743,7 +771,7 @@
         return database.ref('rooms/' + roomId + '/teams/' + teamId).set(teamData);
     }
 
-    function saveQuestions(roomId, questions, problemTypeValue) {
+    function saveQuestions(roomId, questions, problemTypeValue, timerDurationSeconds) {
         const qObj = {};
         questions.forEach((q, i) => {
             qObj[i] = { name: q.name, correctType: q.correctType };
@@ -751,6 +779,9 @@
         const updates = {};
         updates['/rooms/' + roomId + '/questions'] = qObj;
         updates['/rooms/' + roomId + '/problemType'] = problemTypeValue || '1';
+        // 0 أو غير محدد = بدون مؤقت (وقت مفتوح)
+        const seconds = parseInt(timerDurationSeconds) || 0;
+        updates['/rooms/' + roomId + '/timerEndAt'] = seconds > 0 ? (Date.now() + seconds * 1000) : null;
         return database.ref().update(updates);
     }
 
@@ -883,6 +914,72 @@
         teamsContainer.innerHTML = cardsHtml;
     }
 
+    // ============================================================
+    //  المؤقت الزمني للجولة
+    // ============================================================
+    function stopTimerLoop() {
+        if (timerIntervalId) {
+            clearInterval(timerIntervalId);
+            timerIntervalId = null;
+        }
+    }
+
+    function formatTime(totalSeconds) {
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+
+    function tickTimer() {
+        if (!timerEndAt) return;
+        const remainingMs = timerEndAt - Date.now();
+        const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+
+        timerDisplay.textContent = '⏱️ ' + formatTime(remainingSec);
+        timerDisplay.classList.toggle('warning', remainingSec <= 20 && remainingSec > 10);
+        timerDisplay.classList.toggle('danger', remainingSec <= 10);
+
+        if (remainingSec <= 0 && !timeIsUp) {
+            timeIsUp = true;
+            stopTimerLoop();
+            timerDisplay.textContent = '⏰ انتهى الوقت!';
+            timerDisplay.classList.remove('warning');
+            timerDisplay.classList.add('danger');
+            // تعطيل كل قوائم فريقك فور انتهاء الوقت
+            document.querySelectorAll('.exercise-item select').forEach(sel => {
+                if (sel.dataset.teamId === myTeamId) sel.disabled = true;
+            });
+            // تقديم تلقائي للإجابات عند انتهاء الوقت
+            if (currentRoom) {
+                evaluateAndSave(currentRoom);
+            }
+        }
+    }
+
+    function startOrSyncTimer(newTimerEndAt) {
+        // لو نفس الوقت الحالي، لا داعي لإعادة التشغيل
+        if (timerEndAt === newTimerEndAt) return;
+
+        stopTimerLoop();
+        timerEndAt = newTimerEndAt;
+        timeIsUp = false;
+
+        if (!timerEndAt) {
+            timerDisplay.style.display = 'none';
+            return;
+        }
+        timerDisplay.style.display = 'block';
+        timerDisplay.classList.remove('warning','danger');
+
+        // إعادة تفعيل القوائم (جولة جديدة بمؤقت جديد)
+        document.querySelectorAll('.exercise-item select').forEach(sel => {
+            if (sel.dataset.teamId === myTeamId) sel.disabled = false;
+        });
+
+        tickTimer();
+        timerIntervalId = setInterval(tickTimer, 1000);
+    }
+
     function renderChallengeQuestions() {
         challengeItemsContainer.innerHTML = '';
         if (!challengeItems || challengeItems.length===0) {
@@ -933,6 +1030,10 @@
                 } else {
                     select.style.border = '2px solid #2c5364';
                     select.title = 'إجابة فريقك — يمكنك تعديلها';
+                    if (timeIsUp) {
+                        select.disabled = true;
+                        select.title = 'انتهى وقت الجولة — لا يمكن التعديل بعد الآن';
+                    }
                     select.addEventListener('change', function() {
                         // تحقق دفاعي إضافي: لا تنفّذ الحفظ إلا لفريقك أنت
                         if (this.dataset.teamId !== myTeamId) {
@@ -1013,7 +1114,7 @@
         syncRoom(roomId);
         if (asCreator) {
             const qs = generateQuestions(activityType.value, problemType.value);
-            saveQuestions(roomId, qs, problemType.value).then(() => {
+            saveQuestions(roomId, qs, problemType.value, timerDuration.value).then(() => {
                 currentProblemType = problemType.value;
                 challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
                 renderChallengeQuestions();
@@ -1197,7 +1298,7 @@
             return;
         }
         const qs = generateQuestions(activityType.value, problemType.value);
-        saveQuestions(currentRoom, qs, problemType.value).then(() => {
+        saveQuestions(currentRoom, qs, problemType.value, timerDuration.value).then(() => {
             currentProblemType = problemType.value;
             challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
             renderChallengeQuestions();
