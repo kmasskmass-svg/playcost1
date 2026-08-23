@@ -163,16 +163,74 @@
         .modal-box .contact a:hover { text-decoration:underline; }
 
         @media (max-width:600px) {
-            .app-container { padding:20px; }
-            .input-row { grid-template-columns:1fr; }
-            .exercise-item { flex-direction:column; align-items:stretch; }
-            .exercise-item select { width:100%; }
-            .podium { flex-direction:column; align-items:center; }
-            .podium-item { width:100%; border-radius:12px; min-height:auto; padding:15px; }
-            .share-box { flex-direction:column; align-items:stretch; }
-            .modal-box { padding:20px; }
-            .fab { width:56px; height:56px; font-size:26px; bottom:20px; left:20px; }
+            body { padding:8px; align-items:flex-start; }
+            .app-container { padding:16px 14px; border-radius:16px; }
+            .app-header h1 { font-size:22px; }
+            .app-header .author { font-size:13px; }
+            .subtitle { font-size:14px; }
+            .unit-title { font-size:16px; padding:8px; }
+
+            /* أولوية أعلى من .room-setup .input-row عشان تُطبّق فعليًا على الجوال */
+            .room-setup .input-row,
+            .input-row { grid-template-columns:1fr !important; gap:10px; }
+
+            .room-setup { padding:14px; }
+            label { font-size:14px; }
+            select, input { padding:10px 12px; font-size:14px; }
+            #roomCodeInput { font-size:20px !important; letter-spacing:4px !important; }
+
+            .btn { padding:12px 14px; font-size:14px; width:100%; }
+            /* أزرار الغرفة (إنشاء/انضم/توليد) صف واحد بعرض متساوٍ بدل التزاحم */
+            #roomScreen .room-setup > .input-row:nth-of-type(1) + .form-group,
+            #roomScreen .form-group[style*="flex-wrap"] { flex-direction:column; }
+
+            .exercise-item { flex-direction:column; align-items:stretch; padding:12px 14px; }
+            .exercise-item .cost-name { font-size:15px; min-width:0; }
+            .exercise-item select { width:100%; min-width:0; }
+
+            .podium { flex-direction:column; align-items:center; gap:12px; padding:10px 0; }
+            .podium-item { width:100%; border-radius:12px; min-height:auto !important; padding:12px; }
+            .podium-item .rank { font-size:26px; }
+            .podium-item .pname { font-size:16px; }
+            .podium-item .pscore { font-size:18px; }
+
+            .team-card { padding:12px 14px; }
+            .team-card .team-name { font-size:17px; }
+            .team-card .team-score { font-size:20px; }
+
+            .share-box { flex-direction:column; align-items:stretch; padding:10px 14px; }
+            .share-box input { width:100%; text-align:center; }
+            .share-buttons { flex-direction:column; }
+            .share-buttons .btn { width:100%; }
+
+            .score-control { flex-direction:column; align-items:stretch; }
+            .score-control input { width:100%; }
+
+            .modal-box { padding:16px; max-height:85vh; }
+            .modal-box h2 { font-size:20px; }
+            .modal-box h3 { font-size:17px; }
+            .modal-box h4 { font-size:15px; }
+            .modal-box p, .modal-box li { font-size:14px; }
+
+            .fab { width:52px; height:52px; font-size:24px; bottom:16px; left:16px; }
+
+            /* منع تكبير iOS التلقائي للحقول عند التركيز */
+            input, select { font-size:16px !important; }
         }
+
+        /* مؤشر تحميل عام أثناء عمليات Firebase */
+        .btn.loading { position:relative; color:transparent !important; pointer-events:none; opacity:0.85; }
+        .btn.loading::after {
+            content:'';
+            position:absolute; top:50%; left:50%;
+            width:18px; height:18px;
+            margin:-9px 0 0 -9px;
+            border:3px solid rgba(255,255,255,0.4);
+            border-top-color:#fff;
+            border-radius:50%;
+            animation:btnSpin 0.7s linear infinite;
+        }
+        @keyframes btnSpin { to { transform:rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -222,6 +280,10 @@
                 <option value="restaurant">🍽️ مطعم</option>
                 <option value="bakery">🥖 مخبز</option>
                 <option value="workshop">🔧 ورشة صيانة سيارات</option>
+                <option value="pharmacy">💊 صيدلية</option>
+                <option value="dental">🦷 عيادة أسنان</option>
+                <option value="poultry">🐔 مزرعة دواجن</option>
+                <option value="transport">🚚 شركة نقل</option>
             </select>
         </div>
 
@@ -230,8 +292,8 @@
             <select id="problemType">
                 <option value="1">تبويب التكاليف إلى مباشرة وغير مباشرة</option>
                 <option value="2">تبويب التكاليف إلى متغيرة وثابتة</option>
-                <option value="3">تحليل التكاليف شبه المتغيرة (أعلى وأدنى مستوى)</option>
-                <option value="4">حساب معادلة التكاليف (ص = أ + ب س)</option>
+                <option value="3" disabled>تحليل التكاليف شبه المتغيرة (أعلى وأدنى مستوى) — قريبًا 🔜</option>
+                <option value="4" disabled>حساب معادلة التكاليف (ص = أ + ب س) — قريبًا 🔜</option>
             </select>
         </div>
 
@@ -326,9 +388,10 @@
         </ul>
         <h4>الخطوة الثانية: إعداد التحدي</h4>
         <ul>
-            <li>اختر <strong>نوع النشاط الاقتصادي</strong> من القائمة (كوفي شوب، ورشة نجارة، مصنع ملابس، مطعم، مخبز، أو ورشة صيانة سيارات) — يحدد قائمة التكاليف المستخدمة في الأسئلة.</li>
-            <li>اضغط <strong>"🎲 توليد أسئلة جديدة"</strong> لإنشاء 4-6 أسئلة عشوائية من تكاليف النشاط المختار (كل سؤال تكلفة واحدة يجب تصنيفها مباشرة أو غير مباشرة).</li>
-            <li>⚠️ ملاحظة: حقل "نوع المسألة" الموجود بالأعلى مُعد لأنواع مسائل مستقبلية (تحليل التكاليف الثابتة/المتغيرة، شبه المتغيرة، معادلة التكلفة)، وحاليًا التوليد التلقائي يغطي فقط تبويب "مباشرة/غير مباشرة" بغض النظر عن الاختيار في هذه القائمة.</li>
+            <li>اختر <strong>نوع النشاط الاقتصادي</strong> من القائمة (كوفي شوب، ورشة نجارة، مصنع ملابس، مطعم، مخبز، ورشة صيانة سيارات، صيدلية، عيادة أسنان، مزرعة دواجن، أو شركة نقل) — يحدد قائمة التكاليف المستخدمة في الأسئلة.</li>
+            <li>اختر <strong>نوع المسألة</strong>: "تبويب مباشرة/غير مباشرة" أو "تبويب متغيرة/ثابتة" — كلاهما مُفعّل بالكامل الآن. أما "تحليل شبه المتغيرة" و"معادلة التكاليف" فمُعطّلان مؤقتًا (🔜) لأنهما يحتاجان إدخال أرقام وحسابات وليس مجرد تصنيف.</li>
+            <li>اضغط <strong>"🎲 توليد أسئلة جديدة"</strong> لإنشاء 6-8 أسئلة عشوائية تناسب نوع المسألة المختار من تكاليف النشاط.</li>
+            <li>بنك التكاليف موسّع وبكل نشاط تنويع كبير، فبإمكانك توليد جولات متعددة بنفس النشاط والحصول على مزيج مختلف من الأسئلة كل مرة.</li>
             <li>يمكنك الضغط على "توليد أسئلة جديدة" في أي وقت لبدء جولة جديدة بأسئلة مختلفة — هذا يستبدل الأسئلة الحالية للجميع في نفس الغرفة.</li>
         </ul>
         <h4>الخطوة الثالثة: تسجيل فريقك ومشاركة الرابط</h4>
@@ -343,9 +406,10 @@
             <li>افتح الرابط المرسل من المنشئ.</li>
             <li>سيظهر رمز الغرفة تلقائياً ويحاول التطبيق الدخول تلقائيًا. إذا لم يحدث، اضغط <strong>"🚪 انضم للغرفة"</strong> يدوياً.</li>
             <li>سجل اسم فريقك (مرة واحدة فقط) واضغط "✅ تسجيل الفريق".</li>
-            <li>لكل سؤال، من القائمة المنسدلة الخاصة بفريقك، اختر <strong>"مباشرة"</strong> أو <strong>"غير مباشرة"</strong> — يمكنك تغيير اختيارك في أي وقت قبل التقديم.</li>
+            <li>لكل سؤال، من القائمة المنسدلة الخاصة بفريقك، اختر التصنيف المناسب حسب نوع المسألة (<strong>"مباشرة/غير مباشرة"</strong> أو <strong>"متغيرة/ثابتة"</strong>) — يمكنك تغيير اختيارك في أي وقت قبل التقديم.</li>
             <li>بعد الإجابة على جميع الأسئلة، اضغط <strong>"✅ تقديم الإجابات"</strong> لتقييم إجاباتك وتحديث درجتك في اللوحة.</li>
         </ul>
+
 
         <h3>🏆 نظام النقاط ولوحة المتصدرين</h3>
         <ul>
@@ -422,6 +486,7 @@
     let challengeItems = [];
     let isRoomCreator = false;
     let roomListeners = [];
+    let currentProblemType = '1'; // نوع المسألة الحالي بالغرفة (1: مباشرة/غير مباشرة، 2: متغيرة/ثابتة)
 
     // عناصر الواجهة
     const roomScreen = document.getElementById('roomScreen');
@@ -522,12 +587,33 @@
     // الحصول على تكاليف النشاط
     function getActivityCosts(activityKey) {
         const data = {
-            cafe: { name:'☕ كوفي شوب', direct:['حبوب القهوة','حليب','سكر','أكواب ورقية','أغطية','أكياس سكر','قشات','مناديل'], indirect:['إيجار المحل','رواتب الباريستا','رواتب الإدارة','كهرباء وماء','استهلاك آلة الإسبريسو','تأمين','دعاية','عمال نظافة','صيانة','مواد تنظيف'] },
-            carpentry: { name:'🪚 ورشة نجارة', direct:['ألواح خشبية','دهانات وورنيش','مسامير وبراغي','أجور نجارين','أجور دهانين','مواد لاصقة','زجاج','مقابض'], indirect:['إيجار الورشة','رواتب مشرفين','كهرباء','استهلاك آلات','تأمين','صيانة','مواد تنظيف','رواتب إدارية','تسويق'] },
-            factory: { name:'🏭 مصنع ملابس', direct:['أقمشة خام','خيوط وزراير','أجور خياطين','أجور قصّارين','سوست وشرائط','بطانات','أشرطة'], indirect:['إيجار المصنع','رواتب مشرفين','كهرباء','استهلاك ماكينات','تأمين','صيانة','مواد تنظيف','رواتب إدارة','شحن وتوزيع'] },
-            restaurant: { name:'🍽️ مطعم', direct:['لحوم ودواجن','خضروات','توابل','زيوت','أرز','مواد تعبئة','أطباق وأكواب'], indirect:['إيجار المطعم','رواتب الطهاة','رواتب النادلات','رواتب الإدارة','كهرباء وماء وغاز','استهلاك المعدات','تأمين','صيانة','دعاية','مواد تنظيف'] },
-            bakery: { name:'🥖 مخبز', direct:['دقيق','خميرة','سكر','زبدة وزيت','بيض','حليب','ملح','مواد تغليف'], indirect:['إيجار المخبز','رواتب الخبازين','رواتب المساعدين','رواتب الإدارة','كهرباء وماء','استهلاك أفران','تأمين','صيانة الأفران','دعاية','مواد تنظيف'] },
-            workshop: { name:'🔧 ورشة سيارات', direct:['زيوت محركات','فلاتر','قطع غيار','زيوت فرامل','مواد تبريد','بطاريات','إطارات','أجور ميكانيكيين','أجور كهربائيين'], indirect:['إيجار الورشة','رواتب مشرفين','كهرباء وماء','استهلاك معدات الرفع','تأمين','صيانة','مواد تنظيف','رواتب إدارية','دعاية'] }
+            cafe: { name:'☕ كوفي شوب', direct:['حبوب القهوة','حليب','سكر','أكواب ورقية','أغطية','أكياس سكر','قشات','مناديل','شراب الكراميل','مسحوق الشوكولاتة','ملفات (كوكيز) جاهزة','ثلج مكعبات'], indirect:['إيجار المحل','رواتب الباريستا','رواتب الإدارة','كهرباء وماء','استهلاك آلة الإسبريسو','تأمين','دعاية','عمال نظافة','صيانة','مواد تنظيف','اشتراك الإنترنت والموسيقى','رسوم رخصة البلدية'] },
+            carpentry: { name:'🪚 ورشة نجارة', direct:['ألواح خشبية','دهانات وورنيش','مسامير وبراغي','أجور نجارين','أجور دهانين','مواد لاصقة','زجاج','مقابض','مفصلات الأبواب','قماش تنجيد'], indirect:['إيجار الورشة','رواتب مشرفين','كهرباء','استهلاك آلات','تأمين','صيانة','مواد تنظيف','رواتب إدارية','تسويق','إهلاك المعدات','رسوم ترخيص الورشة'] },
+            factory: { name:'🏭 مصنع ملابس', direct:['أقمشة خام','خيوط وزراير','أجور خياطين','أجور قصّارين','سوست وشرائط','بطانات','أشرطة','ملصقات وعلامات تجارية','دبابيس التغليف'], indirect:['إيجار المصنع','رواتب مشرفين','كهرباء','استهلاك ماكينات','تأمين','صيانة','مواد تنظيف','رواتب إدارة','شحن وتوزيع','رسوم الجمارك على المعدات','أمن المصنع'] },
+            restaurant: { name:'🍽️ مطعم', direct:['لحوم ودواجن','خضروات','توابل','زيوت','أرز','مواد تعبئة','أطباق وأكواب','مشروبات غازية','صلصات جاهزة'], indirect:['إيجار المطعم','رواتب الطهاة','رواتب النادلات','رواتب الإدارة','كهرباء وماء وغاز','استهلاك المعدات','تأمين','صيانة','دعاية','مواد تنظيف','رسوم تطبيقات التوصيل الثابتة','اشتراك أنظمة الحجز'] },
+            bakery: { name:'🥖 مخبز', direct:['دقيق','خميرة','سكر','زبدة وزيت','بيض','حليب','ملح','مواد تغليف','فانيليا ومنكهات','شوكولاتة للحشو'], indirect:['إيجار المخبز','رواتب الخبازين','رواتب المساعدين','رواتب الإدارة','كهرباء وماء','استهلاك أفران','تأمين','صيانة الأفران','دعاية','مواد تنظيف','رسوم شهادة السلامة الغذائية'] },
+            workshop: { name:'🔧 ورشة سيارات', direct:['زيوت محركات','فلاتر','قطع غيار','زيوت فرامل','مواد تبريد','بطاريات','إطارات','أجور ميكانيكيين','أجور كهربائيين','شمعات احتراق'], indirect:['إيجار الورشة','رواتب مشرفين','كهرباء وماء','استهلاك معدات الرفع','تأمين','صيانة','مواد تنظيف','رواتب إدارية','دعاية','رسوم ترخيص الورشة'] },
+            pharmacy: { name:'💊 صيدلية', direct:['أدوية ومستحضرات طبية','فيتامينات ومكملات','مستلزمات طبية للبيع','أكياس ومغلفات دواء','مستحضرات تجميل للبيع','منتجات رعاية أطفال'], indirect:['إيجار الصيدلية','رواتب الصيادلة','رواتب الإدارة','كهرباء وماء','تكييف الثلاجات الطبية','تأمين','صيانة الأجهزة','دعاية','مواد تنظيف','رسوم ترخيص وزارة الصحة','اشتراك نظام إدارة المخزون'] },
+            dental: { name:'🦷 عيادة أسنان', direct:['مواد حشو الأسنان','قفازات وكمامات للمريض','إبر التخدير الموضعي','مواد التعقيم للأداة الواحدة','تيجان وتركيبات الأسنان','خيوط تنظيف الأسنان للمريض'], indirect:['إيجار العيادة','رواتب طبيب الأسنان','رواتب المساعدين','رواتب الاستقبال','كهرباء وماء','استهلاك أجهزة الأشعة','تأمين','صيانة كرسي العلاج','دعاية','مواد تنظيف وتعقيم عامة','رسوم الترخيص الطبي'] },
+            poultry: { name:'🐔 مزرعة دواجن', direct:['كتاكيت (صيصان)','أعلاف الدواجن','لقاحات وأدوية بيطرية','مواد تنظيف أقفاص التربية','فيتامينات إضافة للعلف','مواد تعبئة البيض والدجاج'], indirect:['إيجار أو استهلاك المزرعة','رواتب العمال','رواتب المشرف البيطري','كهرباء وماء','استهلاك أجهزة التهوية والتبريد','تأمين','صيانة المعدات','نقل وتوزيع المنتج','رسوم ترخيص وزارة البيئة'] },
+            transport: { name:'🚚 شركة نقل', direct:['وقود المركبات','زيوت ومواد صيانة الشحنة','أجور السائقين','مواد تغليف البضاعة المنقولة','رسوم عبور ومرور الطرق','إطارات المركبات الناقلة'], indirect:['إيجار المستودعات','رواتب الإدارة','رواتب موظفي الجدولة','كهرباء وماء','استهلاك (إهلاك) المركبات','تأمين الأسطول','صيانة دورية عامة','دعاية وتسويق','رسوم تراخيص النقل']  }
+        };
+        return data[activityKey] || data.carpentry;
+    }
+
+    // بنك تصنيف ثانٍ: التكاليف المتغيرة والثابتة (مستقل تربويًا عن تبويب مباشرة/غير مباشرة)
+    function getActivityVariableFixed(activityKey) {
+        const data = {
+            cafe: { variable:['حبوب القهوة حسب عدد الأكواب','أكواب ورقية وأغطية','سكر وشراب النكهات','عمولة تطبيقات التوصيل'], fixed:['إيجار المحل الشهري','رواتب الإدارة الثابتة','قسط التأمين السنوي','استهلاك (إهلاك) آلة الإسبريسو'] },
+            carpentry: { variable:['ألواح خشبية حسب كل طلبية','مسامير ومواد لاصقة','أجور نجارين بالقطعة','دهانات حسب مساحة القطعة'], fixed:['إيجار الورشة الشهري','راتب المشرف الثابت','تأمين المعدات السنوي','استهلاك الآلات الثابت'] },
+            factory: { variable:['أقمشة خام حسب الكمية المصنّعة','خيوط وأزرار للإنتاج','أجور خياطين بالقطعة','مواد تغليف لكل شحنة'], fixed:['إيجار المصنع الشهري','رواتب المشرفين الثابتة','قسط تأمين المصنع','استهلاك الماكينات الثابت'] },
+            restaurant: { variable:['لحوم وخضروات حسب الطلبات','مواد تعبئة الوجبات','توابل وزيوت الطهي','عمولة تطبيقات التوصيل'], fixed:['إيجار المطعم الشهري','رواتب الإدارة الثابتة','تأمين المطعم السنوي','استهلاك المعدات الثابت'] },
+            bakery: { variable:['دقيق وخميرة حسب الإنتاج','سكر وزبدة للطلبات','مواد تغليف المخبوزات','فانيليا ومنكهات حسب الكمية'], fixed:['إيجار المخبز الشهري','رواتب الخبازين الثابتة','قسط تأمين الأفران','استهلاك الأفران الثابت'] },
+            workshop: { variable:['زيوت وفلاتر حسب عدد السيارات','قطع غيار لكل سيارة','أجور ميكانيكيين بالقطعة','مواد تبريد حسب الطلب'], fixed:['إيجار الورشة الشهري','راتب المشرف الثابت','تأمين معدات الرفع السنوي','استهلاك المعدات الثابت'] },
+            pharmacy: { variable:['أدوية حسب المبيعات','أكياس ومغلفات الدواء','مستحضرات تجميل للبيع','عمولة بيع المنتجات'], fixed:['إيجار الصيدلية الشهري','رواتب الصيادلة الثابتة','قسط تأمين الصيدلية','استهلاك ثلاجات الأدوية'] },
+            dental: { variable:['مواد حشو حسب عدد المرضى','قفازات وكمامات لكل مريض','إبر التخدير لكل حالة','مواد تعقيم لكل جلسة'], fixed:['إيجار العيادة الشهري','راتب طبيب الأسنان الثابت','تأمين العيادة السنوي','استهلاك جهاز الأشعة الثابت'] },
+            poultry: { variable:['أعلاف حسب عدد الدواجن','لقاحات وأدوية بيطرية للدفعة','مواد تعبئة البيض والدجاج','كتاكيت لكل دورة تربية'], fixed:['إيجار المزرعة الشهري','راتب المشرف البيطري الثابت','تأمين المزرعة السنوي','استهلاك أجهزة التهوية الثابت'] },
+            transport: { variable:['وقود المركبات حسب المشاوير','أجور السائقين بالرحلة','مواد تغليف البضاعة لكل شحنة','رسوم عبور الطرق لكل رحلة'], fixed:['إيجار المستودعات الشهري','رواتب الإدارة الثابتة','تأمين الأسطول السنوي','استهلاك (إهلاك) المركبات الثابت'] }
         };
         return data[activityKey] || data.carpentry;
     }
@@ -558,13 +644,34 @@
         return div.innerHTML;
     }
 
-    function generateQuestions(activityKey) {
-        const costs = getActivityCosts(activityKey);
-        const direct = costs.direct.map(n => ({name:n, correctType:'direct'}));
-        const indirect = costs.indirect.map(n => ({name:n, correctType:'indirect'}));
+    // إظهار مؤشر تحميل على الزر أثناء تنفيذ عملية Firebase، وإخفاؤه تلقائيًا عند الانتهاء
+    function setBtnLoading(btn, isLoading) {
+        if (!btn) return;
+        if (isLoading) {
+            btn.dataset.wasDisabled = btn.disabled ? '1' : '0';
+            btn.classList.add('loading');
+            btn.disabled = true;
+        } else {
+            btn.classList.remove('loading');
+            btn.disabled = btn.dataset.wasDisabled === '1';
+        }
+    }
+
+    function generateQuestions(activityKey, problemTypeValue) {
+        const ptype = problemTypeValue || '1';
+        let direct, indirect;
+        if (ptype === '2') {
+            const costs = getActivityVariableFixed(activityKey);
+            direct = costs.variable.map(n => ({name:n, correctType:'direct'}));   // 'direct' يمثل هنا "متغيرة"
+            indirect = costs.fixed.map(n => ({name:n, correctType:'indirect'})); // 'indirect' يمثل هنا "ثابتة"
+        } else {
+            const costs = getActivityCosts(activityKey);
+            direct = costs.direct.map(n => ({name:n, correctType:'direct'}));
+            indirect = costs.indirect.map(n => ({name:n, correctType:'indirect'}));
+        }
         const all = shuffleArray([...direct, ...indirect]);
-        const count = Math.min(6, Math.max(4, all.length));
-        return shuffleArray(all).slice(0, count);
+        const count = Math.min(10, Math.max(6, Math.min(all.length, 8)));
+        return shuffleArray(all).slice(0, Math.min(count, all.length));
     }
 
     // ============================================================
@@ -581,6 +688,11 @@
             if (!data) {
                 showError('الغرفة غير موجودة أو تم حذفها.');
                 return;
+            }
+            // تحديث نوع المسألة الحالي (يُستخدم لتحديد تسميات الخيارات: مباشرة/غير مباشرة أو متغيرة/ثابتة)
+            if (data.problemType) {
+                currentProblemType = data.problemType;
+                if (!isRoomCreator) problemType.value = data.problemType;
             }
             // تحديث الفرق
             if (data.teams) {
@@ -631,12 +743,15 @@
         return database.ref('rooms/' + roomId + '/teams/' + teamId).set(teamData);
     }
 
-    function saveQuestions(roomId, questions) {
+    function saveQuestions(roomId, questions, problemTypeValue) {
         const qObj = {};
         questions.forEach((q, i) => {
             qObj[i] = { name: q.name, correctType: q.correctType };
         });
-        return database.ref('rooms/' + roomId + '/questions').set(qObj);
+        const updates = {};
+        updates['/rooms/' + roomId + '/questions'] = qObj;
+        updates['/rooms/' + roomId + '/problemType'] = problemTypeValue || '1';
+        return database.ref().update(updates);
     }
 
     function saveAnswer(roomId, questionIndex, teamId, choice) {
@@ -776,6 +891,12 @@
             return;
         }
         challengeActions.style.display = 'block';
+
+        // تسميات الخيارات تتغير حسب نوع المسألة الحالي بالغرفة
+        const isVariableFixed = currentProblemType === '2';
+        const optionALabel = isVariableFixed ? 'متغيرة' : 'مباشرة';
+        const optionBLabel = isVariableFixed ? 'ثابتة' : 'غير مباشرة';
+
         challengeItems.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = 'exercise-item';
@@ -797,8 +918,8 @@
                 select.style.minWidth = '120px';
                 select.innerHTML = `
                     <option value="">${escapeHtml(team.name)}</option>
-                    <option value="direct">مباشرة</option>
-                    <option value="indirect">غير مباشرة</option>
+                    <option value="direct">${optionALabel}</option>
+                    <option value="indirect">${optionBLabel}</option>
                 `;
                 if (item.userChoices && item.userChoices[team.id]) {
                     select.value = item.userChoices[team.id];
@@ -891,8 +1012,9 @@
         challengeInterface.style.display = 'block';
         syncRoom(roomId);
         if (asCreator) {
-            const qs = generateQuestions(activityType.value);
-            saveQuestions(roomId, qs).then(() => {
+            const qs = generateQuestions(activityType.value, problemType.value);
+            saveQuestions(roomId, qs, problemType.value).then(() => {
+                currentProblemType = problemType.value;
                 challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
                 renderChallengeQuestions();
                 renderScoreControls();
@@ -968,9 +1090,11 @@
         }
 
         // التحقق من عدم وجود الغرفة
+        setBtnLoading(createRoomBtn, true);
         database.ref('rooms/' + code).once('value').then((snap) => {
             if (snap.exists()) {
                 showError('هذه الغرفة موجودة بالفعل. اختر رمزاً آخر.');
+                setBtnLoading(createRoomBtn, false);
                 return;
             }
             const roomData = {
@@ -980,11 +1104,14 @@
                 questions: {}
             };
             database.ref('rooms/' + code).set(roomData).then(() => {
+                setBtnLoading(createRoomBtn, false);
                 enterRoom(code, true);
             }).catch((err) => {
+                setBtnLoading(createRoomBtn, false);
                 showError('حدث خطأ في Firebase أثناء إنشاء الغرفة: ' + err.message);
             });
         }).catch((err) => {
+            setBtnLoading(createRoomBtn, false);
             showError('تعذّر الاتصال بقاعدة البيانات: ' + err.message + ' (تحقق من قواعد الأمان Security Rules في Firebase)');
         });
     });
@@ -997,13 +1124,16 @@
             return;
         }
         roomCodeInput.value = code;
+        setBtnLoading(joinRoomBtn, true);
         database.ref('rooms/' + code).once('value').then((snap) => {
+            setBtnLoading(joinRoomBtn, false);
             if (!snap.exists()) {
                 showError('الغرفة غير موجودة. تأكد من الرمز.');
                 return;
             }
             enterRoom(code, false);
         }).catch((err) => {
+            setBtnLoading(joinRoomBtn, false);
             showError('تعذّر الاتصال بقاعدة البيانات: ' + err.message + ' (تحقق من قواعد الأمان Security Rules في Firebase)');
         });
     });
@@ -1066,8 +1196,9 @@
             showError('فقط منشئ الغرفة يمكنه توليد الأسئلة.');
             return;
         }
-        const qs = generateQuestions(activityType.value);
-        saveQuestions(currentRoom, qs).then(() => {
+        const qs = generateQuestions(activityType.value, problemType.value);
+        saveQuestions(currentRoom, qs, problemType.value).then(() => {
+            currentProblemType = problemType.value;
             challengeItems = qs.map(q => ({ name: q.name, correctType: q.correctType, userChoices: {} }));
             renderChallengeQuestions();
             resultBox.classList.remove('show');
